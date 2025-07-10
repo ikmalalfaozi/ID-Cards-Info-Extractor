@@ -1,0 +1,21 @@
+# general settings
+name: NAFNet-GoPro-width32-test
+model_type: ImageRestorationModel
+scale: 1
+num_gpu: 1 # set num_gpu: 0 for cpu mode
+manual_seed: 10
+
+# network structures
+network_g:
+  type: NAFNetLocal
+  width: 32
+  enc_blk_nums: [1, 1, 1, 28]
+  middle_blk_num: 1
+  dec_blk_nums: [1, 1, 1, 1]
+
+# path
+path:
+  pretrain_network_g: models/NAFNet-GoPro-width32.pth
+  pretrain_network_g_gdrive_id: 1Fr2QadtDCEXg6iwWX8OzeZLbHOx2t5Bj
+  strict_load_g: true
+  resume_state: ~
