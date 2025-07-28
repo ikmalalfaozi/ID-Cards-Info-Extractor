@@ -7,7 +7,7 @@ import gdown
 
 
 class DocDetector:
-    def __init__(self, google_drive_file_id: str = "1Ny156vx7sc6ux_1Ay-gJMYSZwuK6eywn", model_save_path: str = "models/doc-seg-model.pt"):
+    def __init__(self, google_drive_file_id: str = "1Ny156vx7sc6ux_1Ay-gJMYSZwuK6eywn", model_save_path: str = "models/doc-seg.pt"):
         """
         Initialize the document detector.
         Downloads the model from Google Drive if file ID is provided.

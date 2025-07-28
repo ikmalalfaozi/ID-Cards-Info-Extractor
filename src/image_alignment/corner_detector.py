@@ -113,8 +113,8 @@ class CornerDetector:
         Detect the four corners of a document in the image.
 
         Args:
-            image (numpy.ndarray): Input image.
-            mask (numpy.ndarray, optional): Binary segmentation mask of the document.
+            image (numpy.ndarray): Input image (RGB).
+            mask (numpy.ndarray, optional): Binary segmentation mask of the document (0 or 255).
             interactive (bool): Displays an interactive image, allowing the user to adjust the corners.
 
         Returns:
@@ -175,7 +175,8 @@ class CornerDetector:
                     if area_contour > area_docaligner:
                         corners = detected_polygon
 
-        corners = order_points(corners)
+        if len(corners) == 4:
+            corners = order_points(corners)
         if interactive:
             corners = interactive_get_contour(np.array(corners), image)
             corners = corners.astype(np.float32)
