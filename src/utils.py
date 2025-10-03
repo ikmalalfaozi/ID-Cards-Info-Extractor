@@ -23,7 +23,7 @@ def classify_document_type(model: YOLO, image: np.ndarray):
     if not results or not results[0].probs:
         # Handle cases where no predictions are made or probs is empty
         return {
-            "class": "Unknown",
+            "class": "Other",
             "probability": 0.0,
             "probabilities": {}
         }
