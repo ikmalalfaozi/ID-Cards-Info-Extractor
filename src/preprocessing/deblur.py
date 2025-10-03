@@ -86,7 +86,7 @@ def richardson_lucy_deblur(image_input, psf: np.ndarray, num_iter: int, clip: bo
 
     # --- 1. Handle Different Input Types image_input ---
     if isinstance(image_input, str):
-        if not os.path(image_input):
+        if not os.path.exists(image_input):
             print(f"Error: File '{image_input}' not found.")
             return None
         img = cv2.imread(image_input)
