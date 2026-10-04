@@ -7,25 +7,31 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 MODE="${1:-auto}"
-if [ "$MODE" = "auto" ]; then
-  if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi >/dev/null 2>&1; then MODE=gpu; else MODE=cpu; fi
-fi
-[ "$MODE" = "cpu" ] || [ "$MODE" = "gpu" ] || { echo "Mode harus auto|cpu|gpu"; exit 1; }
-echo ">> mode: $MODE"
+# TORCH_GPU: pasang torch CUDA bila torch belum ada. ONNX: runtime untuk DocAligner.
+# `auto` memakai ONNX CPU walau ada GPU: model DocAligner kecil, dan onnxruntime-gpu 1.20 butuh CUDA 12
+# (libcublas.so.12) yang tidak ada di semua Colab/Kaggle; bila gagal memuat, pesan error CUDA muncul.
+# YOLO dan Donut tetap memakai GPU lewat torch. Gunakan `gpu` hanya jika CUDA 12 + cuDNN 9 tersedia.
+case "$MODE" in
+  auto) if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi >/dev/null 2>&1; then TORCH_GPU=1; else TORCH_GPU=0; fi; ONNX=cpu ;;
+  cpu)  TORCH_GPU=0; ONNX=cpu ;;
+  gpu)  TORCH_GPU=1; ONNX=gpu ;;
+  *)    echo "Mode harus auto|cpu|gpu"; exit 1 ;;
+esac
+echo ">> mode: $MODE (torch GPU=$TORCH_GPU, onnxruntime=$ONNX)"
 
 if command -v uv >/dev/null 2>&1; then PIP="uv pip"; else PIP="python -m pip"; fi
 
 # 1) torch: jangan ditimpa bila sudah ada (Colab/Kaggle)
 if python -c "import torch" 2>/dev/null; then
   echo ">> torch sudah terpasang: $(python -c 'import torch; print(torch.__version__)')"
-elif [ "$MODE" = "cpu" ]; then
+elif [ "$TORCH_GPU" = "0" ]; then
   $PIP install "torch==2.6.0" "torchvision==0.21.0" --index-url https://download.pytorch.org/whl/cpu
 else
   $PIP install "torch==2.6.0" "torchvision==0.21.0"
 fi
 
 # 2) dependensi inti + ONNX Runtime + dependensi capybara
-$PIP install -r requirements/base.txt -r "requirements/onnx-$MODE.txt" -r requirements/docaligner-deps.txt
+$PIP install -r requirements/base.txt -r "requirements/onnx-$ONNX.txt" -r requirements/docaligner-deps.txt
 
 # 3) library sistem libturbojpeg (dibutuhkan capybara saat import)
 if [ "$(uname -s)" = "Linux" ] && ! python -c "from turbojpeg import TurboJPEG; TurboJPEG()" 2>/dev/null; then
