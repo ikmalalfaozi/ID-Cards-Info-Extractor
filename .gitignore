@@ -4,3 +4,14 @@ __pycache__*
 data
 datasets
 test
+
+# Laporan tugas akhir (bukan bagian dari kode)
+*.pdf
+*:Zone.Identifier
+
+# Output eksperimen berisi hasil ekstraksi data KTP/SIM/paspor (PII)
+outputs/
+
+# Cache model Hugging Face (Donut, ~777 MB) yang diunduh ke ./models
+models/.locks/
+models/models--*/
