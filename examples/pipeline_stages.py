@@ -132,8 +132,10 @@ def _cuda():
 # --------------------------------------------------------------------- 8. ocr
 def stage_ocr(rgb):
     """Donut: gambar -> JSON field. Model (~777 MB) diunduh ke ./models saat pertama kali."""
+    from transformers.utils import logging as hf_logging
     from src.ocr import DonutInfoExtractor
 
+    hf_logging.set_verbosity_error()  # sembunyikan dump config & peringatan processor dari transformers
     return DonutInfoExtractor().predict(Image.fromarray(rgb))
 
 

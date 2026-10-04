@@ -42,11 +42,11 @@ import sys; sys.path.insert(0, ".")          # atau %cd ke root repo
 
 Untuk OCR (Donut, unduhan sekitar 777 MB): hapus `--until preprocess`.
 
-Jika inferensi DocAligner di GPU gagal memuat CUDA provider (kesalahan cuDNN/CUDA), pasang varian CPU:
-
-```bash
-!pip uninstall -y onnxruntime-gpu && pip install -r requirements/onnx-cpu.txt
-```
+`auto` memasang ONNX Runtime **CPU** walau ada GPU (YOLO dan Donut tetap memakai GPU lewat torch). Model DocAligner
+kecil, dan `onnxruntime-gpu` 1.20 butuh CUDA 12 (`libcublas.so.12`): di Colab uji, paket itu gagal memuat CUDA provider
+(`Failed to load library libonnxruntime_providers_cuda.so`) lalu jatuh ke CPU dengan pesan error. Pakai
+`bash scripts/install.sh gpu` hanya jika CUDA 12 + cuDNN 9 tersedia. Di CPU-only ORT, `Backend.cuda` hanya
+memberi peringatan dan hasilnya sama (diuji).
 
 ## Linux / WSL lokal
 
