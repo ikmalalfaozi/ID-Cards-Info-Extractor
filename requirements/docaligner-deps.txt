@@ -18,4 +18,4 @@ flask
 shapely
 piexif
 matplotlib
-pyheif; platform_system == "Linux"
+# pyheif (Linux) dipasang oleh scripts/install.sh: tidak ada wheel untuk Python 3.13
