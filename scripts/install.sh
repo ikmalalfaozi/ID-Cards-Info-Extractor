@@ -35,6 +35,25 @@ if [ "$(uname -s)" = "Linux" ] && ! python -c "from turbojpeg import TurboJPEG; 
   $SUDO apt-get install -y -qq libturbojpeg0 2>/dev/null || $SUDO apt-get install -y -qq libturbojpeg
 fi
 
+# 3b) pyheif (hanya Linux): capybara 0.6.0 meng-import-nya tanpa pengaman. Python 3.13 tidak punya wheel,
+#     jadi dibangun dari source (butuh libheif-dev). Bila tetap gagal, pasang stub agar import berjalan
+#     (hanya membaca file .heic/.heif yang tidak akan berfungsi).
+if [ "$(uname -s)" = "Linux" ] && ! python -c "import pyheif" 2>/dev/null; then
+  $PIP install pyheif || {
+    echo ">> pyheif gagal dipasang, mencoba libheif-dev"
+    SUDO=""; [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null 2>&1 && SUDO="sudo"
+    ($SUDO apt-get install -y -qq libheif-dev build-essential libffi-dev && $PIP install pyheif) || {
+      echo ">> PERINGATAN: pyheif tidak tersedia; memasang stub (file .heic/.heif tidak didukung)"
+      python - <<'PY'
+import os, site
+p = os.path.join(site.getsitepackages()[0], "pyheif.py")
+open(p, "w").write("# stub dari scripts/install.sh\ndef read(*a, **k):\n    raise ImportError('pyheif tidak terpasang: .heic/.heif tidak didukung')\n")
+print("stub ditulis:", p)
+PY
+    }
+  }
+fi
+
 # 4) DocAligner + capybara tanpa dependensi (sudah dipasang manual di atas)
 $PIP install --no-deps -r requirements/docaligner.txt
 
@@ -48,4 +67,4 @@ print("numpy", numpy.__version__, "| torch", torch.__version__, "| cv2", cv2.__v
 print("onnxruntime providers:", ort.get_available_providers())
 print("OK: DocAligner dapat diimpor")
 PY
-echo ">> Selesai. Di Colab/Kaggle: RESTART runtime/kernel sebelum menjalankan kode (numpy diturunkan ke 1.26)."
+echo ">> Selesai. Di Colab/Kaggle: restart runtime/kernel bila ada paket (mis. numpy) yang diganti, sebelum menjalankan kode."
