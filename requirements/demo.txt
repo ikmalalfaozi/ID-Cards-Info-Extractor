@@ -1,0 +1,2 @@
+# Hanya untuk demo web.
+streamlit>=1.45,<2

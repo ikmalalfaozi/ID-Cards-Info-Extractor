@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Instalasi dependensi untuk Linux / Colab / Kaggle (Windows: lihat docs/INSTALL.md).
+#   bash scripts/install.sh [auto|cpu|gpu]
+# Urutan penting: DocAligner & capybara dipasang --no-deps karena metadata capybara 0.6.0
+# meminta onnxruntime_gpu==1.20.1 yang tidak ada di PyPI.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+MODE="${1:-auto}"
+if [ "$MODE" = "auto" ]; then
+  if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi >/dev/null 2>&1; then MODE=gpu; else MODE=cpu; fi
+fi
+[ "$MODE" = "cpu" ] || [ "$MODE" = "gpu" ] || { echo "Mode harus auto|cpu|gpu"; exit 1; }
+echo ">> mode: $MODE"
+
+if command -v uv >/dev/null 2>&1; then PIP="uv pip"; else PIP="python -m pip"; fi
+
+# 1) torch: jangan ditimpa bila sudah ada (Colab/Kaggle)
+if python -c "import torch" 2>/dev/null; then
+  echo ">> torch sudah terpasang: $(python -c 'import torch; print(torch.__version__)')"
+elif [ "$MODE" = "cpu" ]; then
+  $PIP install "torch==2.6.0" "torchvision==0.21.0" --index-url https://download.pytorch.org/whl/cpu
+else
+  $PIP install "torch==2.6.0" "torchvision==0.21.0"
+fi
+
+# 2) dependensi inti + ONNX Runtime + dependensi capybara
+$PIP install -r requirements/base.txt -r "requirements/onnx-$MODE.txt" -r requirements/docaligner-deps.txt
+
+# 3) library sistem libturbojpeg (dibutuhkan capybara saat import)
+if [ "$(uname -s)" = "Linux" ] && ! python -c "from turbojpeg import TurboJPEG; TurboJPEG()" 2>/dev/null; then
+  echo ">> memasang libturbojpeg"
+  SUDO=""; [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null 2>&1 && SUDO="sudo"
+  $SUDO apt-get update -qq || true
+  $SUDO apt-get install -y -qq libturbojpeg0 2>/dev/null || $SUDO apt-get install -y -qq libturbojpeg
+fi
+
+# 4) DocAligner + capybara tanpa dependensi (sudah dipasang manual di atas)
+$PIP install --no-deps -r requirements/docaligner.txt
+
+# 5) verifikasi
+python - <<'PY'
+import numpy, torch, cv2
+from capybara import Backend
+from docaligner import DocAligner, ModelType
+import onnxruntime as ort
+print("numpy", numpy.__version__, "| torch", torch.__version__, "| cv2", cv2.__version__)
+print("onnxruntime providers:", ort.get_available_providers())
+print("OK: DocAligner dapat diimpor")
+PY
+echo ">> Selesai. Di Colab/Kaggle: RESTART runtime/kernel sebelum menjalankan kode (numpy diturunkan ke 1.26)."

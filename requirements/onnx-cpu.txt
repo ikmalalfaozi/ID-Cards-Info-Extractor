@@ -1,0 +1,2 @@
+# Windows / Mac / Linux tanpa GPU.
+onnxruntime==1.20.1

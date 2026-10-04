@@ -1,0 +1,3 @@
+# Linux + GPU NVIDIA (Colab/Kaggle GPU). capybara 0.6.0 meminta onnxruntime_gpu==1.20.1
+# yang tidak ada di PyPI; 1.20.x terdekat yang tersedia dipakai di sini.
+onnxruntime-gpu>=1.20.0,<1.21
