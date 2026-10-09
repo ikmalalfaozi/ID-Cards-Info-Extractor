@@ -15,7 +15,6 @@ network_g:
 
 # path
 path:
-  pretrain_network_g: models/NAFNet-SIDD-width32.pth
-  pretrain_network_g_gdrive_id: 1lsByk21Xw-6aW7epCwOQxvm6HYCQZPHZ
+  pretrain_model: nafnet-sidd-w32
   strict_load_g: true
   resume_state: ~

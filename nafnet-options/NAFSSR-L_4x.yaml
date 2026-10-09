@@ -14,7 +14,6 @@ network_g:
 
 # path
 path:
-  pretrain_network_g: models/NAFSSR-L_4x.pth
-  pretrain_network_g_gdrive_id: 1TIdQhPtBrZb2wrBdAp9l8NHINLeExOwb
+  pretrain_model: nafssr-l-4x
   strict_load_g: true
   resume_state: ~

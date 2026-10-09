@@ -1,22 +1,33 @@
-import os
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 import re
 
 from PIL import Image
 import torch
 from transformers import DonutProcessor, VisionEncoderDecoderModel
 
+from ..model_store import external_revision
+
 
 class DonutInfoExtractor:
-    def __init__(self, model_name: str = "ikmalalfaozi/donut-base-finetuned-ktp-sim-passport-v3"):
+    def __init__(self, model_name: Optional[str] = None, revision: Optional[str] = None):
         """
         Initialize DonutInfoExtractor with the Donut model.
 
+        By default the model and the pinned commit come from the model manifest (src/model_manifest.json).
+
         Parameters:
-        model_name (str): The name of the Donut model to use.
+        model_name (str, optional): Hugging Face repo id of the Donut model.
+        revision (str, optional): Commit/tag to load. Only the default model is pinned automatically;
+            for another `model_name` the latest revision is used unless `revision` is given.
         """
+        default_repo, default_revision = external_revision("donut")
+        if model_name is None:
+            model_name = default_repo
+        if revision is None and model_name == default_repo:
+            revision = default_revision
         self.model_name = model_name
-        self.processor, self.model = self.download_model(model_name)
+        self.revision = revision
+        self.processor, self.model = self.download_model(model_name, revision=revision)
 
     def preprocess(self, img: Image.Image) -> Dict[str, Any]:
         """
@@ -71,20 +82,18 @@ class DonutInfoExtractor:
 
         return self.processor.token2json(sequence)
 
-    def download_model(self, model_name: str, cache_dir: str = "./models"):
+    def download_model(self, model_name: str, revision: Optional[str] = None, cache_dir: Optional[str] = None):
         """
         Download Donut models from Hugging Face.
 
         Parameters:
         model_name (str): The name of the Donut model to download.
-        cache_dir (str): Directory to store downloaded models.
+        revision (str, optional): Commit/tag to download (pin).
+        cache_dir (str, optional): Cache directory. Default: the Hugging Face cache (HF_HOME).
 
         Returns:
         Tuple[DonutProcessor, VisionEncoderDecoderModel]: Processor and model objects.
         """
-        if not os.path.exists(cache_dir):
-            os.makedirs(cache_dir)
-        processor = DonutProcessor.from_pretrained(model_name, cache_dir=cache_dir)
-        model = VisionEncoderDecoderModel.from_pretrained(model_name, cache_dir=cache_dir)
+        processor = DonutProcessor.from_pretrained(model_name, revision=revision, cache_dir=cache_dir)
+        model = VisionEncoderDecoderModel.from_pretrained(model_name, revision=revision, cache_dir=cache_dir)
         return processor, model
-

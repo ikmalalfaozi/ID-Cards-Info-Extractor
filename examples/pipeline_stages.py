@@ -80,10 +80,9 @@ def stage_orientation(rgb):
 # ----------------------------------------------------------------- 5. filter
 def stage_filter(rgb):
     """Filter jenis dokumen: KTP / SIM / Passport / Other."""
-    from ultralytics import YOLO
-    from src.utils import classify_document_type
+    from src.utils import classify_document_type, load_doc_type_model
 
-    result = classify_document_type(YOLO(os.path.join(ROOT, "models", "doc-type-cls.pt")), rgb)
+    result = classify_document_type(load_doc_type_model(), rgb)
     print(f"    jenis: {result['class']} (p={result['probability']:.2f})")
     return result
 
@@ -109,12 +108,11 @@ def stage_preprocess(rgb):
 def stage_nafnet(rgb, config="nafnet-options/NAFNet-GoPro-width32.yaml"):
     """(Opsional) restorasi dengan NAFNet sebagai alternatif deblur klasik.
 
-    Bobot diunduh otomatis lewat gdown ke models/ pada pemakaian pertama.
+    Bobot (kunci `pretrain_model` di YAML) diunduh dari Hugging Face dan diverifikasi sha256 saat pertama kali dipakai.
     """
     from src.nafnet.utils import parse, create_model, img2tensor, tensor2img
 
     opt = parse(os.path.join(ROOT, config))
-    opt["dist"] = False  # SEMENTARA: bug di model.py membaca opt['dist'] yang tidak ada
     opt["num_gpu"] = 0 if not _cuda() else opt.get("num_gpu", 1)
     model = create_model(opt)
     bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
@@ -131,7 +129,7 @@ def _cuda():
 
 # --------------------------------------------------------------------- 8. ocr
 def stage_ocr(rgb):
-    """Donut: gambar -> JSON field. Model (~777 MB) diunduh ke ./models saat pertama kali."""
+    """Donut: gambar -> JSON field. Model (~777 MB) diunduh ke cache Hugging Face (HF_HOME) pada commit yang dipin."""
     from transformers.utils import logging as hf_logging
     from src.ocr import DonutInfoExtractor
 
