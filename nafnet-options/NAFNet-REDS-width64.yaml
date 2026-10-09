@@ -15,7 +15,6 @@ network_g:
 
 # path
 path:
-  pretrain_network_g: models/NAFNet-REDS-width64.pth
-  pretrain_network_g_gdrive_id: 14D4V4raNYIOhETfcuuLI3bGLB-OYIv6X
+  pretrain_model: nafnet-reds-w64
   strict_load_g: true
   resume_state: ~

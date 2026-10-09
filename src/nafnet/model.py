@@ -1,13 +1,12 @@
 import math
-import os
 import os.path as osp
 
-import gdown
 import torch
 from collections import OrderedDict
 from copy import deepcopy
 from torch.nn.parallel import DataParallel, DistributedDataParallel
 from src.nafnet.archs import NAFNet, NAFNetLocal, NAFSSR
+from ..model_store import ensure_model
 
 
 class BaseModel:
@@ -30,14 +29,14 @@ class BaseModel:
         """
 
         net = net.to(self.device)
-        if self.opt['dist']:
+        if self.opt.get('dist', False):
             find_unused_parameters = self.opt.get('find_unused_parameters',
                                                   False)
             net = DistributedDataParallel(
                 net,
                 device_ids=[torch.cuda.current_device()],
                 find_unused_parameters=find_unused_parameters)
-        elif self.opt['num_gpu'] > 1:
+        elif self.opt.get('num_gpu', 0) > 1:
             net = DataParallel(net)
         return net
 
@@ -62,10 +61,9 @@ class BaseModel:
         """
         net = self.get_bare_model(net)
         load_net = torch.load(
-            load_path, map_location=lambda storage, loc: storage)
+            load_path, map_location=lambda storage, loc: storage, weights_only=True)
         if param_key is not None:
             load_net = load_net[param_key]
-        print(' load net keys', load_net.keys)
         # remove unnecessary 'module.'
         for k, v in deepcopy(load_net).items():
             if k.startswith('module.'):
@@ -97,20 +95,19 @@ class ImageRestorationModel(BaseModel):
         self.net_g = self.model_to_device(self.net_g)
         self.net_g.eval()
 
-        # load pretrained models
-        load_path = self.opt['path'].get('pretrain_network_g', None)
-        gdrive_id = self.opt['path'].get('pretrain_network_g_gdrive_id', None)
+        # load pretrained models: `pretrain_model` (kunci manifest, diunduh/diverifikasi oleh ensure_model)
+        # atau `pretrain_network_g` (berkas lokal eksplisit, harus sudah ada)
+        path_opt = self.opt['path']
+        load_path = path_opt.get('pretrain_network_g', None)
+        if not load_path and path_opt.get('pretrain_model'):
+            load_path = str(ensure_model(path_opt['pretrain_model']))
         if load_path:
-            model_dir = osp.dirname(load_path)
-            os.makedirs(model_dir, exist_ok=True)
-
-            if not osp.exists(load_path) and gdrive_id:
-                print(f"Downloading model from Google Drive (ID: {gdrive_id}) to {load_path}...")
-                gdown.download(id=gdrive_id, output=load_path, quiet=False)
-
+            if not osp.isfile(load_path):
+                raise FileNotFoundError(f"Bobot NAFNet tidak ditemukan: {load_path}. "
+                                        f"Gunakan `pretrain_model` (kunci manifest) agar diunduh otomatis.")
             self.load_network(self.net_g, load_path,
-                              self.opt['path'].get('strict_load_g', True),
-                              param_key=self.opt['path'].get('param_key', 'params'))
+                              path_opt.get('strict_load_g', True),
+                              param_key=path_opt.get('param_key', 'params'))
 
         self.scale = int(opt['scale'])
 

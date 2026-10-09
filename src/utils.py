@@ -2,6 +2,13 @@ import numpy as np
 import cv2
 from ultralytics import YOLO
 
+from .model_store import resolve_model_path
+
+
+def load_doc_type_model(model_path=None) -> YOLO:
+    """Load the document-type classifier (KTP/SIM/Passport/Other); managed model "doc-type-cls" by default."""
+    return YOLO(str(resolve_model_path("doc-type-cls", model_path=model_path)))
+
 
 def classify_document_type(model: YOLO, image: np.ndarray):
     """

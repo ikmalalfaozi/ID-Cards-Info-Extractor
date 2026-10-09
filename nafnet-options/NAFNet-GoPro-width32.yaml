@@ -15,7 +15,6 @@ network_g:
 
 # path
 path:
-  pretrain_network_g: models/NAFNet-GoPro-width32.pth
-  pretrain_network_g_gdrive_id: 1Fr2QadtDCEXg6iwWX8OzeZLbHOx2t5Bj
+  pretrain_model: nafnet-gopro-w32
   strict_load_g: true
   resume_state: ~

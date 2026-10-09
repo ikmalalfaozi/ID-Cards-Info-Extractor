@@ -1,24 +1,25 @@
-import os
 import cv2
 import numpy as np
 import torch
 from ultralytics import YOLO
-import gdown
+
+from ..model_store import resolve_model_path
 
 
 class DocOrientationDetector:
-    def __init__(self, google_drive_file_id: str = "1oIJ9KlGXNqvbcYknTWR0zb153Fjhzwua",
-                 model_save_path: str = "models/doc-oc.pt"):
+    def __init__(self, google_drive_file_id=None, model_save_path=None, *, model_path=None):
         """
         Initialize the document orientation detector.
-        Downloads the model from Google Drive if file ID is provided.
-        Automatically detects and uses GPU if available, otherwise CPU.
+        By default the model ("doc-oc") is resolved through the model manifest (Hugging Face, pinned
+        revision, checksum verified). Automatically detects and uses GPU if available, otherwise CPU.
 
         Args:
-            google_drive_file_id (str, optional): Google Drive file ID of the YOLO segmentation model.
-            model_save_path (str): Local path where the model will be saved/loaded from.
+            google_drive_file_id: Deprecated and ignored (kept for backward compatibility).
+            model_save_path: Alias of `model_path` (backward compatibility).
+            model_path (str, optional): Local YOLO weights to use instead of the managed model.
         """
-        self.model_path = model_save_path
+        self.model_path = str(resolve_model_path("doc-oc", model_path=model_path, model_save_path=model_save_path,
+                                                 google_drive_file_id=google_drive_file_id))
 
         # 1. Determine the device automatically
         if torch.cuda.is_available():
@@ -28,27 +29,7 @@ class DocOrientationDetector:
             self.device = "cpu"
             print("ImageOrientationDetector: GPU (CUDA) is not available. Using CPU.")
 
-        # 2. Download model if file ID is provided and model doesn't exist
-        if google_drive_file_id:
-            if not os.path.exists(self.model_path):
-                print(f"Model not found at {self.model_path}. Attempting to download from Google Drive...")
-                try:
-                    # Construct Google Drive download URL
-                    url = f'https://drive.google.com/uc?id={google_drive_file_id}'
-                    gdown.download(url, self.model_path, quiet=False)
-                    print(f"Model downloaded successfully to {self.model_path}.")
-                except Exception as e:
-                    raise RuntimeError(f"Failed to download model from Google Drive (ID: {google_drive_file_id}): {e}")
-            else:
-                print(f"Model already exists at {self.model_path}. Skipping download")
-        else:
-            if not os.path.exists(self.model_path):
-                raise FileNotFoundError(
-                    f"No Google Drive file ID provided, and model not found at {self.model_path}. Please provide a valid file ID or ensure the model file exists.")
-            else:
-                print(f"Loading existing model from {self.model_path}.")
-
-        # 3. Initalize the YOLO model
+        # 2. Initialize the YOLO model
         try:
             self.model = YOLO(self.model_path)
             print(f"YOLO model initialized successfully with model loaded from {self.model_path}.")

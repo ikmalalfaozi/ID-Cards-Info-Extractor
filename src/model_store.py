@@ -172,6 +172,26 @@ def ensure_model(name: str, *, offline: Optional[bool] = None, verify: bool = Tr
         + "\nAlternatif: letakkan file di $IDCARD_MODELS_DIR/" + entry["file"])
 
 
+def resolve_model_path(name: str, *, model_path: Optional[str] = None, model_save_path: Optional[str] = None,
+                       google_drive_file_id: Optional[str] = None) -> Path:
+    """Path model untuk kelas yang menerima override lokal.
+
+    `model_path` / `model_save_path` (alias lama) = berkas lokal eksplisit; harus sudah ada.
+    Tanpa override -> model terkelola `name` lewat ensure_model(). `google_drive_file_id` sudah tidak dipakai.
+    """
+    if google_drive_file_id is not None:
+        warnings.warn("google_drive_file_id sudah tidak dipakai; model diunduh lewat manifest (src/model_manifest.json).",
+                      DeprecationWarning, stacklevel=3)
+    explicit = model_path or model_save_path
+    if explicit:
+        path = Path(explicit)
+        if not path.is_file():
+            raise FileNotFoundError(
+                f"Berkas model tidak ditemukan: {path}. Hapus argumen path agar memakai model terkelola '{name}'.")
+        return path
+    return ensure_model(name)
+
+
 def external_revision(name: str, manifest: Optional[Dict[str, Any]] = None) -> Tuple[str, str]:
     """(repo_id, revision) untuk model eksternal di Hugging Face, mis. 'donut'."""
     manifest = manifest if manifest is not None else load_manifest()
