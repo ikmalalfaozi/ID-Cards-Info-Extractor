@@ -106,8 +106,15 @@ def test_external_revision_donut_is_pinned_commit():
     assert repo.startswith("ikmalalfaozi/donut") and ms._COMMIT_RE.match(rev)
 
 
+def test_committed_manifest_is_release_ready():
+    assert ms.manifest_issues() == []        # revision terisi, semua sha256/size ada
+
+
 def test_manifest_issues_reports_unfinished_release():
-    issues = ms.manifest_issues()           # manifest asli belum dipublikasikan
+    m = copy.deepcopy(ms.load_manifest())
+    m["hub"]["revision"] = None
+    m["models"]["nafnet-gopro-w32"]["sha256"] = None
+    issues = ms.manifest_issues(m)
     assert any("hub.revision" in i for i in issues)
     assert any("nafnet-gopro-w32: sha256 kosong" in i for i in issues)
     assert ms.manifest_issues(make_manifest()) == []
