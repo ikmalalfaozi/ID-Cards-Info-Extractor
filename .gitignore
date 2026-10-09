@@ -12,6 +12,6 @@ test
 # Output eksperimen berisi hasil ekstraksi data KTP/SIM/paspor (PII)
 outputs/
 
-# Cache model Hugging Face (Donut, ~777 MB) yang diunduh ke ./models
-models/.locks/
-models/models--*/
+# Model diunduh otomatis ke cache Hugging Face (lihat docs/INSTALL.md, bagian Model); folder ini hanya
+# untuk berkas lokal/cache lama dan tidak dilacak. Riwayat git tetap menyimpan model lama.
+models/

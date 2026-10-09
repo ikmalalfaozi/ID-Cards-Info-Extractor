@@ -1,6 +1,6 @@
 # Desain: Penyimpanan dan Pemuatan Model
 
-Status: usulan, belum diimplementasikan. Menggantikan `gdown` (Google Drive) dan model `.pt` di git sebagai jalur utama.
+Status: P1-P3 dan P5 diimplementasikan; P4 (uji bersih di Colab/Kaggle) dijalankan oleh pemilik repo. Menggantikan `gdown` (Google Drive) dan model `.pt` di git sebagai jalur utama.
 
 ## 1. Keputusan yang sudah diambil
 - Repo kode dan repo model **publik**; model boleh dibagikan.
