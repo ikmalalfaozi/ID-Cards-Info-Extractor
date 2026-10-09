@@ -1,0 +1,93 @@
+{
+  "schema": 1,
+  "hub": {
+    "repo_id": "ikmalalfaozi/id-cards-extractor-models",
+    "tag": "v1.0",
+    "revision": null
+  },
+  "models": {
+    "doc-seg": {
+      "file": "yolo/doc-seg.pt",
+      "sha256": "9d8ddfb212f2e909fdad1c11354e4a9b4c8467395f8a6bc1ccd96f7c404119ac",
+      "size": 5979549,
+      "fallback": {
+        "gdrive": "1Ny156vx7sc6ux_1Ay-gJMYSZwuK6eywn"
+      }
+    },
+    "doc-oc": {
+      "file": "yolo/doc-oc.pt",
+      "sha256": "1bde10a4bd4461d1de76d9e32f26fbbf141f2af937ab5861afcf5e3b8bdbeb16",
+      "size": 3189947,
+      "fallback": {
+        "gdrive": "1oIJ9KlGXNqvbcYknTWR0zb153Fjhzwua"
+      }
+    },
+    "doc-type-cls": {
+      "file": "yolo/doc-type-cls.pt",
+      "sha256": "5ba80c0a6cb67498e813a9995df2cfab659b6755cb17cd6a4422b39ad0217c51",
+      "size": 20881807
+    },
+    "nafnet-gopro-w32": {
+      "file": "nafnet/NAFNet-GoPro-width32.pth",
+      "sha256": null,
+      "size": null,
+      "fallback": {
+        "gdrive": "1Fr2QadtDCEXg6iwWX8OzeZLbHOx2t5Bj"
+      }
+    },
+    "nafnet-gopro-w64": {
+      "file": "nafnet/NAFNet-GoPro-width64.pth",
+      "sha256": null,
+      "size": null,
+      "fallback": {
+        "gdrive": "1S0PVRbyTakYY9a82kujgZLbMihfNBLfC"
+      }
+    },
+    "nafnet-reds-w64": {
+      "file": "nafnet/NAFNet-REDS-width64.pth",
+      "sha256": null,
+      "size": null,
+      "fallback": {
+        "gdrive": "14D4V4raNYIOhETfcuuLI3bGLB-OYIv6X"
+      }
+    },
+    "nafnet-sidd-w32": {
+      "file": "nafnet/NAFNet-SIDD-width32.pth",
+      "sha256": null,
+      "size": null,
+      "fallback": {
+        "gdrive": "1lsByk21Xw-6aW7epCwOQxvm6HYCQZPHZ"
+      }
+    },
+    "nafnet-sidd-w64": {
+      "file": "nafnet/NAFNet-SIDD-width64.pth",
+      "sha256": null,
+      "size": null,
+      "fallback": {
+        "gdrive": "14Fht1QQJ2gMlk4N1ERCRuElg8JfjrWWR"
+      }
+    },
+    "nafssr-l-2x": {
+      "file": "nafnet/NAFSSR-L_2x.pth",
+      "sha256": null,
+      "size": null,
+      "fallback": {
+        "gdrive": "1SZ6bQVYTVS_AXedBEr-_mBCC-qGYHLmf"
+      }
+    },
+    "nafssr-l-4x": {
+      "file": "nafnet/NAFSSR-L_4x.pth",
+      "sha256": null,
+      "size": null,
+      "fallback": {
+        "gdrive": "1TIdQhPtBrZb2wrBdAp9l8NHINLeExOwb"
+      }
+    }
+  },
+  "external": {
+    "donut": {
+      "repo_id": "ikmalalfaozi/donut-base-finetuned-ktp-sim-passport-v3",
+      "revision": "ab6bf5f7fef0f4fe6e4d5de505d0b3987104b599"
+    }
+  }
+}
