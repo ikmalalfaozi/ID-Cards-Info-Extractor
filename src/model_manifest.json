@@ -3,7 +3,7 @@
   "hub": {
     "repo_id": "ikmalalfaozi/id-cards-extractor-models",
     "tag": "v1.0",
-    "revision": null
+    "revision": "51c07da430040d1d48c7eeb2f527adc731245751"
   },
   "models": {
     "doc-seg": {
@@ -29,56 +29,56 @@
     },
     "nafnet-gopro-w32": {
       "file": "nafnet/NAFNet-GoPro-width32.pth",
-      "sha256": null,
-      "size": null,
+      "sha256": "19394e6155d12ef6371d1d57496f87f0ec88f92bdffa27c0792690722d5d1a5c",
+      "size": 68671121,
       "fallback": {
         "gdrive": "1Fr2QadtDCEXg6iwWX8OzeZLbHOx2t5Bj"
       }
     },
     "nafnet-gopro-w64": {
       "file": "nafnet/NAFNet-GoPro-width64.pth",
-      "sha256": null,
-      "size": null,
+      "sha256": "329d3ab4077b8d6b7ff61de376e483714667960bf85be027bf4335cda701196f",
+      "size": 271778961,
       "fallback": {
         "gdrive": "1S0PVRbyTakYY9a82kujgZLbMihfNBLfC"
       }
     },
     "nafnet-reds-w64": {
       "file": "nafnet/NAFNet-REDS-width64.pth",
-      "sha256": null,
-      "size": null,
+      "sha256": "175fe8b3cdf3abedfbc87769779c3d9f491e05bb2e73ea9d627883f90a4b2df3",
+      "size": 271756689,
       "fallback": {
         "gdrive": "14D4V4raNYIOhETfcuuLI3bGLB-OYIv6X"
       }
     },
     "nafnet-sidd-w32": {
       "file": "nafnet/NAFNet-SIDD-width32.pth",
-      "sha256": null,
-      "size": null,
+      "sha256": "89c70e808d1783b6c07911306e106aaf0d4f7f3da8c61078b99ff7f8929a26f4",
+      "size": 116861841,
       "fallback": {
         "gdrive": "1lsByk21Xw-6aW7epCwOQxvm6HYCQZPHZ"
       }
     },
     "nafnet-sidd-w64": {
       "file": "nafnet/NAFNet-SIDD-width64.pth",
-      "sha256": null,
-      "size": null,
+      "sha256": "cd685efaae01f7c4e9951f2deab05780079c8eb1e49ed664b72f6db04dabb445",
+      "size": 464154961,
       "fallback": {
         "gdrive": "14Fht1QQJ2gMlk4N1ERCRuElg8JfjrWWR"
       }
     },
     "nafssr-l-2x": {
       "file": "nafnet/NAFSSR-L_2x.pth",
-      "sha256": null,
-      "size": null,
+      "sha256": "29d22ff966a6c069ef0db4fa2cb7a22d96f68a05f85c02d3255d55c30cc415f6",
+      "size": 96438421,
       "fallback": {
         "gdrive": "1SZ6bQVYTVS_AXedBEr-_mBCC-qGYHLmf"
       }
     },
     "nafssr-l-4x": {
       "file": "nafnet/NAFSSR-L_4x.pth",
-      "sha256": null,
-      "size": null,
+      "sha256": "7298e608e689449cb4408b9caf7aeb587c5a39e7c95514808821111e1daa17f4",
+      "size": 96604501,
       "fallback": {
         "gdrive": "1TIdQhPtBrZb2wrBdAp9l8NHINLeExOwb"
       }
