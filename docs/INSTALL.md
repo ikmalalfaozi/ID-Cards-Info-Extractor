@@ -40,7 +40,7 @@ import sys; sys.path.insert(0, ".")          # atau %cd ke root repo
 !python examples/pipeline_stages.py "demo_input/doni.jpg" --until preprocess
 ```
 
-Untuk OCR (Donut, unduhan sekitar 777 MB): hapus `--until preprocess`.
+Untuk OCR (Donut, unduhan sekitar 777 MB): hapus `--until preprocess`. Model diunduh dari Hugging Face (lihat bagian Model).
 
 `auto` memasang ONNX Runtime **CPU** walau ada GPU (YOLO dan Donut tetap memakai GPU lewat torch). Model DocAligner
 kecil, dan `onnxruntime-gpu` 1.20 butuh CUDA 12 (`libcublas.so.12`): di Colab uji, paket itu gagal memuat CUDA provider
@@ -74,6 +74,42 @@ pip install --no-deps -r requirements/docaligner.txt
 
 `libjpeg-turbo` untuk Windows harus dipasang terpisah (installer resmi libjpeg-turbo) dan perlu diverifikasi
 `import capybara` berhasil. `pyheif` hanya dibutuhkan di Linux (sudah diberi marker di `docaligner-deps.txt`).
+
+## Model
+
+Model tidak disimpan di git. Semuanya diunduh otomatis pada pemakaian pertama dan diverifikasi sha256-nya:
+
+| Model | Sumber | Dipin lewat |
+|---|---|---|
+| YOLO (`doc-seg`, `doc-oc`, `doc-type-cls`) dan bobot NAFNet/NAFSSR (7) | repo Hugging Face `ikmalalfaozi/id-cards-extractor-models` (publik, tag `v1.0`) | commit sha + sha256 di `src/model_manifest.json` |
+| Donut (OCR, ~777 MB) | repo Hugging Face `ikmalalfaozi/donut-base-finetuned-ktp-sim-passport-v3` | commit sha di `src/model_manifest.json` |
+
+Unduhan disimpan di cache Hugging Face (`~/.cache/huggingface`, atau `HF_HOME`), sehingga berkas yang tidak berubah antar rilis
+tidak diunduh ulang. Folder `models/` di repo tidak lagi dipakai.
+
+Variabel lingkungan:
+
+| Variabel | Fungsi |
+|---|---|
+| `HF_HUB_OFFLINE=1` | hanya memakai cache (tanpa jaringan); error jelas bila model belum ada |
+| `IDCARD_MODELS_DIR=<folder>` | mirror lokal dengan struktur `yolo/`, `nafnet/` seperti repo Hugging Face |
+| `IDCARD_NO_FALLBACK=1` | matikan cadangan `gdown` (Google Drive); dipakai untuk membuktikan unduhan hanya dari Hugging Face |
+| `IDCARD_CACHE_DIR` | lokasi cache cadangan `gdown` (default `~/.cache/idcard_extractor`) |
+
+Memakai model sendiri tanpa mengubah manifest: `DocDetector(model_path="...")`, `DocOrientationDetector(model_path="...")`,
+`load_doc_type_model("...")`, atau `pretrain_network_g: <path>` di YAML NAFNet (berkas harus sudah ada).
+
+Menyiapkan semua model sebelum offline, dan memeriksa integritasnya:
+
+```python
+from src.model_store import verify_all
+print(verify_all())                 # {'doc-seg': 'ok', ...}; jalankan dengan internet sekali
+```
+
+Merilis model baru (pemilik repo): letakkan berkas di `models/` (YOLO) atau biarkan skrip mengunduh bobot NAFNet,
+lalu `python scripts/upload_models.py` (rencana), dan `--execute --tag vX.Y --license other --yolo-license <lisensi>`
+untuk mengunggah dan memperbarui manifest. Tag yang sudah ada tidak dipindahkan; rilis baru memakai tag baru.
+Lihat `docs/model-storage-design.md`.
 
 ## Struktur requirements
 
