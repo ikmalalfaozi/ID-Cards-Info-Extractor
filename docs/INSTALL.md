@@ -83,6 +83,23 @@ onnxruntime dan matplotlib diimpor malas: `import src.image_alignment` (deteksi 
 walaupun keduanya belum terpasang; `CornerDetector()` baru memberi `ImportError` berisi perintah instalasi saat dibuat.
 Mode `interactive=True` membutuhkan backend matplotlib interaktif (tidak jalan di Colab/Kaggle).
 
+## Kecepatan Donut (opsional)
+
+`DonutInfoExtractor` memakai setelan yang sama dengan tesis secara bawaan (fp32, beam search 3, `max_length` = batas model).
+Opsi berikut mengubah kecepatan dan sebaiknya divalidasi (mis. CER) sebelum dipakai untuk angka yang dilaporkan:
+
+| Opsi | Efek |
+|---|---|
+| `max_length=300` (konstruktor atau per panggilan) | memotong generasi yang tak berujung; tidak mengubah keluaran yang valid. Tidak boleh melebihi batas model (1536) |
+| `num_beams=1` | greedy, lebih cepat (uji CPU: ±1,4x); keluaran bisa berbeda dari beam 3 |
+| `predict_batch(images, batch_size=...)` | satu `generate` untuk beberapa gambar; terutama bermanfaat di GPU |
+| `dtype="bfloat16"` / `"float16"` | `float16` hanya CUDA; belum divalidasi |
+| `quantize="int8"` | kuantisasi dinamis, hanya CPU; ±1,4x lebih cepat tetapi keluaran berubah |
+
+Uji CPU (i5-10210U, 3 gambar ter-align): bawaan baru identik dengan kode lama; `predict_batch`, `num_beams=1`, dan
+`max_length=300` menghasilkan JSON yang sama pada 3 gambar itu (sampel kecil, bukan bukti CER). Generasi tak berujung
+(mis. foto mentah yang belum di-align) berjalan sampai 1536 token dan puluhan kali lebih lambat.
+
 ## Model
 
 Model tidak disimpan di git. Semuanya diunduh otomatis pada pemakaian pertama dan diverifikasi sha256-nya:
