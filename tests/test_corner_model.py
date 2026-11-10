@@ -46,3 +46,59 @@ def test_heatmap_postprocess_returns_centroid_of_largest_blob():
     x, y = cm._corner_from_heatmap(channel, (64, 64))
     assert (round(x), round(y)) == (14, 14)
     assert cm._corner_from_heatmap(np.zeros((64, 64), dtype="float32"), (64, 64)) is None
+
+
+# ------------------------------------------------------------------ backend torch
+def _tiny_onnx(path):
+    """Model mini: img (1,3,256,256) -> Sigmoid -> heatmap; cukup untuk menguji jalur ort vs torch tanpa unduhan."""
+    onnx = pytest.importorskip("onnx")
+    from onnx import TensorProto, helper
+    node = helper.make_node("Sigmoid", ["img"], ["heatmap"])
+    graph = helper.make_graph([node], "tiny", [helper.make_tensor_value_info("img", TensorProto.FLOAT, [1, 3, 256, 256])],
+                              [helper.make_tensor_value_info("heatmap", TensorProto.FLOAT, [1, 3, 256, 256])])
+    model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 16)])
+    model.ir_version = 8
+    onnx.save(model, str(path))
+    return str(path)
+
+
+def test_unknown_backend_is_rejected():
+    with pytest.raises(ValueError, match="Unsupported backend"):
+        cm.CornerModel(backend="tensorrt")
+
+
+def test_torch_backend_gives_actionable_error_without_onnx2torch():
+    import subprocess
+    import sys
+    import textwrap
+    from pathlib import Path
+    code = textwrap.dedent("""
+        import sys
+        class Block:
+            def find_spec(self, name, path=None, target=None):
+                if name.split('.')[0] == 'onnx2torch':
+                    raise ImportError('diblokir untuk uji')
+        sys.meta_path.insert(0, Block())
+        from src.image_alignment.corner_model import _TorchSession
+        try:
+            _TorchSession('x.onnx', 'cpu')
+        except ImportError as e:
+            print('ImportError:', e)
+    """)
+    r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True,
+                       cwd=Path(__file__).resolve().parents[1])
+    assert "ImportError: Backend 'torch' membutuhkan onnx2torch" in r.stdout and "torch-backend.txt" in r.stdout, \
+        r.stdout + r.stderr[-400:]
+
+
+def test_torch_backend_matches_onnx_backend(tmp_path):
+    pytest.importorskip("onnx2torch")
+    pytest.importorskip("onnxruntime")
+    path = _tiny_onnx(tmp_path / "tiny.onnx")
+    img = np.zeros((120, 200, 3), dtype="uint8")
+    for (y, x) in ((20, 20), (20, 170), (100, 170), (100, 20)):      # empat blob terang di sudut
+        img[y - 8:y + 8, x - 8:x + 8] = 255
+    a = cm.CornerModel("heatmap", None, model_path=path, device="cpu", backend="onnx")(img)
+    b = cm.CornerModel("heatmap", None, model_path=path, device="cpu", backend="torch")(img)
+    assert a.shape == b.shape and a.dtype == b.dtype
+    assert np.allclose(a, b, atol=1e-3)

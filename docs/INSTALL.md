@@ -74,6 +74,11 @@ Model terdaftar di manifest (`doc-corner-*`) dan diunduh otomatis saat pertama d
 bukan torch: GPU dipakai hanya bila `onnxruntime-gpu` terpasang (`requirements/onnx-gpu.txt`); selain itu CPU dan
 mencetak pemberitahuan.
 
+Backend torch (opsional): `CornerDetector(backend="torch")` menjalankan model yang sama lewat `onnx2torch`
+(`pip install -r requirements/torch-backend.txt`; `onnxruntime` tidak dibutuhkan). Device mengikuti `get_device()`.
+Diuji di CPU: sudut model heatmap identik dengan onnxruntime, model `point` selisih <= 0,0012 piksel; torch
+lebih lambat (heatmap sekitar 1,2-1,6x, `point` sekitar 12x). GPU dan dataset laporan belum diuji. Bawaannya tetap `onnx`.
+
 onnxruntime dan matplotlib diimpor malas: `import src.image_alignment` (deteksi dokumen, warp, orientasi) berhasil
 walaupun keduanya belum terpasang; `CornerDetector()` baru memberi `ImportError` berisi perintah instalasi saat dibuat.
 Mode `interactive=True` membutuhkan backend matplotlib interaktif (tidak jalan di Colab/Kaggle).
@@ -121,5 +126,6 @@ Lihat `docs/model-storage-design.md`.
 | `requirements.txt` | `base.txt` + `onnx-cpu.txt` (pemasangan satu perintah, CPU) |
 | `requirements/base.txt` | dependensi inti (tanpa torch) |
 | `requirements/onnx-cpu.txt` / `onnx-gpu.txt` | ONNX Runtime (pilih satu) |
+| `requirements/torch-backend.txt` | opsional: `onnx2torch` untuk `CornerDetector(backend="torch")` |
 | `requirements/demo.txt` | streamlit dan matplotlib (demo web, mode interaktif) |
 | `requirements/dev.txt` | pytest |
