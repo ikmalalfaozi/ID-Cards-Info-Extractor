@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 
-from ..config import get_device, onnx_cuda_available
 from .image_transform import order_points  # noqa: F401  (tetap bisa diimpor dari sini untuk kompatibilitas)
 
 _NON_INTERACTIVE_BACKENDS = {"agg", "pdf", "ps", "svg", "cairo", "template"}
@@ -64,49 +63,21 @@ def interactive_get_contour(corners, image):
 
 
 class CornerDetector:
-    def __init__(self, model_type="heatmap", model_cfg=None, device=None):
+    def __init__(self, model_type="heatmap", model_cfg=None, model_path=None, device=None):
         """
-        Initialize the corner detector using the DocAligner library.
-
-        DocAligner is imported here (not at module level) so the rest of `image_alignment` works without it.
+        Initialize the corner detector (DocAligner models, run directly with onnxruntime).
 
         Args:
-            model_type (str | docaligner.ModelType): "heatmap" or "point".
-            model_cfg (str): Configuration for the model (e.g., 'lcnet100', 'fastvit_t8', 'fastvit_sa24').
+            model_type (str): "heatmap" (default) or "point".
+            model_cfg (str, optional): heatmap: 'fastvit_sa24' (default), 'fastvit_t8', 'lcnet100'; point: 'lcnet050'.
+            model_path (str, optional): local ONNX file to use instead of the managed model.
             device (str, optional): "cpu", "cuda" or None for automatic (see src.config.get_device).
-                DocAligner runs on onnxruntime: CUDA is used only when onnxruntime-gpu is installed.
+                CUDA is used only when onnxruntime-gpu is installed.
         """
-        try:
-            from capybara import Backend
-            from docaligner import DocAligner, ModelType
-        except ImportError as e:
-            raise ImportError(
-                f"DocAligner tidak dapat diimpor ({e}). Pasang dengan: bash scripts/install.sh "
-                "(atau lihat docs/INSTALL.md, bagian DocAligner).") from e
+        from .corner_model import CornerModel
 
-        if isinstance(model_type, str):
-            try:
-                model_type = ModelType[model_type]
-            except KeyError:
-                raise ValueError(f"Unsupported model type: {model_type!r} (use 'heatmap' or 'point').") from None
-        if model_cfg is None:
-            if model_type == ModelType.heatmap:
-                model_cfg = 'fastvit_sa24'  # Default for heatmap
-            elif model_type == ModelType.point:
-                model_cfg = 'lcnet050'  # Default for point
-            else:
-                raise ValueError("Unsupported model type.")
-
-        self.device = get_device(device)
-        use_cuda = self.device.startswith("cuda") and onnx_cuda_available()
-        backend = Backend.cuda if use_cuda else Backend.cpu
-        if self.device.startswith("cuda") and not use_cuda:
-            print("CornerDetector: onnxruntime-gpu tidak terpasang. DocAligner memakai CPU.")
-        else:
-            print(f"CornerDetector: using {'GPU (CUDA)' if use_cuda else 'CPU'}.")
-
-        # Initialize the model
-        self.model = DocAligner(model_type=model_type, model_cfg=model_cfg, backend=backend)
+        self.model = CornerModel(model_type=model_type, model_cfg=model_cfg, model_path=model_path, device=device)
+        self.device = self.model.device
 
     def detect_corners(self, image, mask=None, interactive=False):
         """

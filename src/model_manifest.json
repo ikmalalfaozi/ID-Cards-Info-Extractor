@@ -82,6 +82,38 @@
       "fallback": {
         "gdrive": "1TIdQhPtBrZb2wrBdAp9l8NHINLeExOwb"
       }
+    },
+    "doc-corner-heatmap-fastvit-sa24": {
+      "file": "docaligner/fastvit_sa24_h_e_bifpn_256_fp32.onnx",
+      "sha256": "7f9f5a8935b2eb22b3ee0245d34996063f54562df390d34714af2d76928695bc",
+      "size": 83084930,
+      "fallback": {
+        "gdrive": "14vUH77v6yGg7zFctUgcT6BzV5Iisg4Dl"
+      }
+    },
+    "doc-corner-heatmap-fastvit-t8": {
+      "file": "docaligner/fastvit_t8_h_e_bifpn_256_fp32.onnx",
+      "sha256": "950070fd4a46e25d46db7c35d0ed77612d9063f70d4543c7c504f0da6a943a89",
+      "size": 13167814,
+      "fallback": {
+        "gdrive": "1W88oOkHjMza6xXbDxrG8k_C-Tf2aYKJ4"
+      }
+    },
+    "doc-corner-heatmap-lcnet100": {
+      "file": "docaligner/lcnet100_h_e_bifpn_256_fp32.onnx",
+      "sha256": "f4117b786e3a18470f3865c93f3c2bd69d9b998edd60f385574a5c665e79594e",
+      "size": 4767987,
+      "fallback": {
+        "gdrive": "1IlbLPkCv-TdaBLOPh_4J97P1_KHYYJ7a"
+      }
+    },
+    "doc-corner-point-lcnet050": {
+      "file": "docaligner/lcnet050_p_multi_decoder_l3_d64_256_fp32.onnx",
+      "sha256": "32d186080ce16442674d4c0eaaaaac878eea289b56a8d1284f05fff1ff42e220",
+      "size": 4911217,
+      "fallback": {
+        "gdrive": "1J7cRuupeEIudYrH_CCSV9WvFfu9JM_qU"
+      }
     }
   },
   "external": {
