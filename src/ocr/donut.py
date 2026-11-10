@@ -2,14 +2,14 @@ from typing import Any, Dict, Optional
 import re
 
 from PIL import Image
-import torch
 from transformers import DonutProcessor, VisionEncoderDecoderModel
 
+from ..config import get_device
 from ..model_store import external_revision
 
 
 class DonutInfoExtractor:
-    def __init__(self, model_name: Optional[str] = None, revision: Optional[str] = None):
+    def __init__(self, model_name: Optional[str] = None, revision: Optional[str] = None, device: Optional[str] = None):
         """
         Initialize DonutInfoExtractor with the Donut model.
 
@@ -19,6 +19,7 @@ class DonutInfoExtractor:
         model_name (str, optional): Hugging Face repo id of the Donut model.
         revision (str, optional): Commit/tag to load. Only the default model is pinned automatically;
             for another `model_name` the latest revision is used unless `revision` is given.
+        device (str, optional): "cpu", "cuda" or None for automatic (see src.config.get_device).
         """
         default_repo, default_revision = external_revision("donut")
         if model_name is None:
@@ -28,6 +29,8 @@ class DonutInfoExtractor:
         self.model_name = model_name
         self.revision = revision
         self.processor, self.model = self.download_model(model_name, revision=revision)
+        self.device = get_device(device)
+        self.model.to(self.device)
 
     def preprocess(self, img: Image.Image) -> Dict[str, Any]:
         """
@@ -60,12 +63,9 @@ class DonutInfoExtractor:
         inputs = self.preprocess(img)
         decoder_input_ids = self.processor.tokenizer(task_prompt, add_special_tokens=False, return_tensors="pt")["input_ids"]
 
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model.to(device)
-
         outputs = self.model.generate(
-            inputs.pixel_values.to(device),
-            decoder_input_ids=decoder_input_ids.to(device),
+            inputs.pixel_values.to(self.device),
+            decoder_input_ids=decoder_input_ids.to(self.device),
             max_length=self.model.decoder.config.max_position_embeddings,
             pad_token_id=self.processor.tokenizer.pad_token_id,
             eos_token_id=self.processor.tokenizer.eos_token_id,

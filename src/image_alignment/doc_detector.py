@@ -1,33 +1,30 @@
 import cv2
 import numpy as np
-import torch.cuda
 from ultralytics import YOLO
 
+from ..config import get_device
 from ..model_store import resolve_model_path
 
 
 class DocDetector:
-    def __init__(self, google_drive_file_id=None, model_save_path=None, *, model_path=None):
+    def __init__(self, google_drive_file_id=None, model_save_path=None, *, model_path=None, device=None):
         """
         Initialize the document detector.
         By default the model ("doc-seg") is resolved through the model manifest (Hugging Face, pinned
-        revision, checksum verified). Automatically detects and uses GPU if available, otherwise CPU.
+        revision, checksum verified). Uses the GPU if available, otherwise CPU (see src.config.get_device).
 
         Args:
             google_drive_file_id: Deprecated and ignored (kept for backward compatibility).
             model_save_path: Alias of `model_path` (backward compatibility).
             model_path (str, optional): Local YOLO weights to use instead of the managed model.
+            device (str, optional): "cpu", "cuda" or None for automatic.
         """
         self.model_path = str(resolve_model_path("doc-seg", model_path=model_path, model_save_path=model_save_path,
                                                  google_drive_file_id=google_drive_file_id))
 
-        # 1. Determine the device automatically
-        if torch.cuda.is_available():
-            self.device = "cuda"
-            print("DocDetector: GPU (CUDA) is available. Using GPU.")
-        else:
-            self.device = "cpu"
-            print("DocDetector: GPU (CUDA) is not available. Using CPU.")
+        # 1. Determine the device
+        self.device = get_device(device)
+        print(f"DocDetector: using {self.device}.")
 
         # 2. Initialize the YOLO model
         try:
