@@ -2,22 +2,18 @@
 
 Python 3.10-3.13 (3.11 dan 3.13 diuji penuh; Colab saat ini memakai 3.13).
 
-## Kenapa tidak cukup `pip install -r requirements.txt`
+## Ringkasan
 
-`capybara-docsaid==0.6.0` (dibutuhkan DocAligner) mengunci `onnxruntime_gpu==1.20.1` di Linux, versi yang
-tidak ada di PyPI, sehingga pip gagal me-resolve. Karena itu `capybara-docsaid` dan `docaligner-docsaid`
-dipasang dengan `--no-deps`, dan dependensinya dicantumkan manual. `scripts/install.sh` melakukan urutan ini.
+`pip install -r requirements.txt` cukup untuk dependensi runtime (CPU). DocAligner tidak lagi dipasang sebagai paket:
+modelnya dijalankan langsung lewat onnxruntime (`src/image_alignment/corner_model.py`), jadi tidak ada pin
+`capybara`/`docaligner`, `libturbojpeg`, atau `pyheif`. `scripts/install.sh` hanya menambah torch bila belum ada dan
+memilih onnxruntime CPU/GPU.
 
-Hal lain yang perlu diketahui:
-- **numpy dan opencv tidak dikunci** (`numpy>=1.26`, `opencv-python>=4.10`). Metadata capybara meminta
-  `numpy<2` dan `opencv==4.9.0.80`, tetapi itu hanya metadata (capybara dipasang `--no-deps`) dan numpy 1.26
-  tidak punya wheel untuk Python 3.13. Diuji: keluaran DocAligner di Python 3.11/numpy 1.26/opencv 4.9 dan
-  Python 3.13/numpy 2.5/opencv 4.14 sama (selisih sudut <= 0,05 piksel), begitu pula JSON Donut.
-- **pyheif** (Linux, di-import capybara tanpa pengaman) tidak punya wheel untuk Python 3.13. `install.sh`
-  mencoba `pip install pyheif`, lalu `apt install libheif-dev`, dan terakhir memasang stub (file `.heic/.heif`
-  tidak akan terbaca, JPG/PNG tidak terpengaruh).
-- **`libturbojpeg`** (library sistem) wajib ada saat `import capybara`. Skrip memasangnya lewat apt.
-- **`PyTurboJPEG<2`**: versi 2.x butuh libjpeg-turbo 3, sedangkan Ubuntu/Colab/Kaggle membawa 2.x.
+- **numpy dan opencv tidak dikunci** (`numpy>=1.26`, `opencv-python>=4.10`; numpy 1.26 tidak punya wheel untuk Python 3.13).
+  Diuji: keluaran sudut di Python 3.11/numpy 1.26/opencv 4.9 identik dengan DocAligner asli; JSON Donut sama di
+  Python 3.13/numpy 2.5/opencv 4.14.
+- **onnxruntime** `>=1.20,<2` (batas bawah yang punya wheel Python 3.13). Diuji 1.20.1 (Python 3.11) dan 1.31.1
+  (Python 3.13, numpy 2.5, opencv 4.14): sudut model heatmap identik; model `point` selisih <= 0,0005 piksel.
 - torch/torchvision tidak ada di `requirements/base.txt` agar torch bawaan Colab/Kaggle tidak ditimpa.
   Yang diuji: torch 2.6.0 (CPU) di Python 3.11 dan 3.13. Torch bawaan Colab/Kaggle yang lebih baru belum diuji
   (jalur GPU juga belum dijalankan, hanya di-resolve).
@@ -45,8 +41,8 @@ Untuk OCR (Donut, unduhan sekitar 777 MB): hapus `--until preprocess`. Model diu
 `auto` memasang ONNX Runtime **CPU** walau ada GPU (YOLO dan Donut tetap memakai GPU lewat torch). Model DocAligner
 kecil, dan `onnxruntime-gpu` 1.20 butuh CUDA 12 (`libcublas.so.12`): di Colab uji, paket itu gagal memuat CUDA provider
 (`Failed to load library libonnxruntime_providers_cuda.so`) lalu jatuh ke CPU dengan pesan error. Pakai
-`bash scripts/install.sh gpu` hanya jika CUDA 12 + cuDNN 9 tersedia. Di CPU-only ORT, `Backend.cuda` hanya
-memberi peringatan dan hasilnya sama (diuji).
+`bash scripts/install.sh gpu` hanya jika CUDA 12 + cuDNN 9 tersedia. Dengan onnxruntime CPU, `CornerDetector`
+memakai CPU dan hasilnya sama.
 
 ## Linux / WSL lokal
 
@@ -55,25 +51,15 @@ python3.11 -m venv .venv && source .venv/bin/activate     # atau: uv venv --pyth
 bash scripts/install.sh cpu                                # atau gpu
 ```
 
-Tanpa sudo, `libturbojpeg` dapat diekstrak ke folder sendiri lalu ditunjuk lewat `LD_LIBRARY_PATH`:
-
-```bash
-apt download libturbojpeg0 && dpkg -x libturbojpeg0_*.deb .venv/native
-export LD_LIBRARY_PATH="$PWD/.venv/native/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
-```
-
 ## Windows (belum diuji)
 
 ```powershell
 py -3.11 -m venv .venv ; .venv\Scripts\activate
 pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cpu
-pip install -r requirements/base.txt -r requirements/onnx-cpu.txt
-pip install -r requirements/docaligner-deps.txt
-pip install --no-deps -r requirements/docaligner.txt
+pip install -r requirements.txt
 ```
 
-`libjpeg-turbo` untuk Windows harus dipasang terpisah (installer resmi libjpeg-turbo) dan perlu diverifikasi
-`import capybara` berhasil. `pyheif` hanya dibutuhkan di Linux (sudah diberi marker di `docaligner-deps.txt`).
+Tidak ada langkah tambahan: semua dependensi berupa wheel PyPI. Belum dijalankan di Windows.
 
 ## Device (GPU/CPU)
 
@@ -98,7 +84,7 @@ Model tidak disimpan di git. Semuanya diunduh otomatis pada pemakaian pertama da
 
 | Model | Sumber | Dipin lewat |
 |---|---|---|
-| YOLO (`doc-seg`, `doc-oc`, `doc-type-cls`) dan bobot NAFNet/NAFSSR (7) | repo Hugging Face `ikmalalfaozi/id-cards-extractor-models` (publik, tag `v1.0`) | commit sha + sha256 di `src/model_manifest.json` |
+| YOLO (`doc-seg`, `doc-oc`, `doc-type-cls`), bobot NAFNet/NAFSSR (7), dan DocAligner (`doc-corner-*`, 4 ONNX) | repo Hugging Face `ikmalalfaozi/id-cards-extractor-models` (publik, tag `v1.1`) | commit sha + sha256 di `src/model_manifest.json` |
 | Donut (OCR, ~777 MB) | repo Hugging Face `ikmalalfaozi/donut-base-finetuned-ktp-sim-passport-v3` | commit sha di `src/model_manifest.json` |
 
 Unduhan disimpan di cache Hugging Face (`~/.cache/huggingface`, atau `HF_HOME`), sehingga berkas yang tidak berubah antar rilis
@@ -132,8 +118,8 @@ Lihat `docs/model-storage-design.md`.
 
 | File | Isi |
 |---|---|
+| `requirements.txt` | `base.txt` + `onnx-cpu.txt` (pemasangan satu perintah, CPU) |
 | `requirements/base.txt` | dependensi inti (tanpa torch) |
 | `requirements/onnx-cpu.txt` / `onnx-gpu.txt` | ONNX Runtime (pilih satu) |
-| `requirements/docaligner-deps.txt` | dependensi capybara yang dipasang manual |
-| `requirements/docaligner.txt` | capybara + docaligner, pasang dengan `--no-deps` |
-| `requirements/demo.txt` | streamlit (hanya untuk demo) |
+| `requirements/demo.txt` | streamlit dan matplotlib (demo web, mode interaktif) |
+| `requirements/dev.txt` | pytest |
