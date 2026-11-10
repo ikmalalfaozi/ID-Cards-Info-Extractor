@@ -15,3 +15,8 @@ outputs/
 # Model diunduh otomatis ke cache Hugging Face (lihat docs/INSTALL.md, bagian Model); folder ini hanya
 # untuk berkas lokal/cache lama dan tidak dilacak. Riwayat git tetap menyimpan model lama.
 models/
+
+# Artefak build/instalasi paket (pip install -e, python -m build)
+*.egg-info/
+build/
+dist/
