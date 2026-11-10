@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from torchvision.utils import make_grid
 
-from src.nafnet.model import ImageRestorationModel
+from .model import ImageRestorationModel
 
 
 def ordered_yaml():
@@ -53,17 +53,18 @@ def parse(opt_path, is_train=False):
     return opt
 
 
-def create_model(opt):
+def create_model(opt, device=None):
     """
     Create model.
 
     Args:
         opt (dict): Configuration. It contains:
             model_type (str): Model type.
+        device (str, optional): "cpu", "cuda" or None for automatic (see src.config.get_device).
     """
     model_type = opt['model_type']
     if model_type == 'ImageRestorationModel':
-        model = ImageRestorationModel(opt)
+        model = ImageRestorationModel(opt, device=device)
     else:
         raise ValueError(f'{model_type} is not found.')
     return model

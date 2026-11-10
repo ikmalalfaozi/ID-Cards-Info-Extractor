@@ -1,52 +1,34 @@
-import math
 import os.path as osp
 
 import torch
 from collections import OrderedDict
 from copy import deepcopy
-from torch.nn.parallel import DataParallel, DistributedDataParallel
-from src.nafnet.archs import NAFNet, NAFNetLocal, NAFSSR
+
+from ..config import get_device
 from ..model_store import ensure_model
+from .archs import NAFNet, NAFNetLocal, NAFSSR
 
 
 class BaseModel:
     """Base model for inference."""
 
-    def __init__(self, opt):
+    def __init__(self, opt, device=None):
+        """
+        Args:
+            opt (dict): Options. `num_gpu: 0` in the option file (legacy) still forces CPU.
+            device (str, optional): "cpu", "cuda" or None for automatic (argument > $IDCARD_DEVICE > auto).
+        """
         self.opt = opt
-        # Set device to CUDA if available and num_gpu is not 0, otherwise CPU
-        self.device = torch.device('cuda' if opt.get('num_gpu', 0) != 0 and torch.cuda.is_available() else 'cpu')
+        if device is None and opt.get('num_gpu', 1) == 0:
+            device = 'cpu'
+        self.device = torch.device(get_device(device))
 
     def feed_data(self, data):
         pass
 
     def model_to_device(self, net):
-        """Model to device. It also warps models with DistributedDataParallel
-        or DataParallel.
-
-        Args:
-            net (nn.Module)
-        """
-
-        net = net.to(self.device)
-        if self.opt.get('dist', False):
-            find_unused_parameters = self.opt.get('find_unused_parameters',
-                                                  False)
-            net = DistributedDataParallel(
-                net,
-                device_ids=[torch.cuda.current_device()],
-                find_unused_parameters=find_unused_parameters)
-        elif self.opt.get('num_gpu', 0) > 1:
-            net = DataParallel(net)
-        return net
-
-    def get_bare_model(self, net):
-        """Get bare model, especially under wrapping with
-        DistributedDataParallel or DataParallel.
-        """
-        if isinstance(net, (DataParallel, DistributedDataParallel)):
-            net = net.module
-        return net
+        """Move the network to the selected device (inference only: no multi-GPU wrappers)."""
+        return net.to(self.device)
 
     def load_network(self, net, load_path, strict=True, param_key='params'):
         """Load network.
@@ -59,7 +41,6 @@ class BaseModel:
                 None, use the root 'path'.
                 Default: 'params'.
         """
-        net = self.get_bare_model(net)
         load_net = torch.load(
             load_path, map_location=lambda storage, loc: storage, weights_only=True)
         if param_key is not None:
@@ -87,8 +68,8 @@ def define_network(opt):
 
 
 class ImageRestorationModel(BaseModel):
-    def __init__(self, opt):
-        super(ImageRestorationModel, self).__init__(opt)
+    def __init__(self, opt, device=None):
+        super(ImageRestorationModel, self).__init__(opt, device=device)
 
         # define network
         self.net_g = define_network(deepcopy(opt['network_g']))

@@ -75,6 +75,20 @@ pip install --no-deps -r requirements/docaligner.txt
 `libjpeg-turbo` untuk Windows harus dipasang terpisah (installer resmi libjpeg-turbo) dan perlu diverifikasi
 `import capybara` berhasil. `pyheif` hanya dibutuhkan di Linux (sudah diberi marker di `docaligner-deps.txt`).
 
+## Device (GPU/CPU)
+
+Pemilihan device dipusatkan di `src/config.py` (`get_device`). Prioritas: argumen `device=` pada kelas
+(`DocDetector`, `DocOrientationDetector`, `CornerDetector`, `DonutInfoExtractor`, `create_model`) > variabel lingkungan
+`IDCARD_DEVICE` (`auto`, `cpu`, `cuda`, `cuda:N`) > otomatis (CUDA bila ada). Meminta CUDA tanpa GPU tidak menggagalkan
+proses: dipakai CPU dengan peringatan. Contoh paksa CPU: `IDCARD_DEVICE=cpu python examples/pipeline_stages.py ...`.
+
+DocAligner berjalan lewat onnxruntime, bukan torch: GPU dipakai hanya bila `onnxruntime-gpu` terpasang
+(`requirements/onnx-gpu.txt`); selain itu `CornerDetector` memakai CPU dan mencetak pemberitahuan.
+
+DocAligner dan matplotlib diimpor malas: `import src.image_alignment` (deteksi dokumen, warp, orientasi) berhasil
+walaupun DocAligner belum terpasang; `CornerDetector()` baru memberi `ImportError` berisi perintah instalasi saat dibuat.
+Mode `interactive=True` membutuhkan backend matplotlib interaktif (tidak jalan di Colab/Kaggle).
+
 ## Model
 
 Model tidak disimpan di git. Semuanya diunduh otomatis pada pemakaian pertama dan diverifikasi sha256-nya:

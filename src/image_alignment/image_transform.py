@@ -1,6 +1,31 @@
 import numpy as np
 import cv2
-from src.image_alignment import order_points
+
+
+def order_points(pts):
+    """
+    Order points in top-left, top-right, bottom-right, bottom-left order.
+
+    Args:
+        pts (numpy.ndarray): List of corner points.
+
+    Returns:
+        list: Ordered corner points.
+    """
+    rect = np.zeros((4, 2), dtype='float32')
+    s = pts.sum(axis=1)
+    # Top-left point will have the smallest sum.
+    rect[0] = pts[np.argmin(s)]
+    # Bottom-right point will have the largest sum.
+    rect[2] = pts[np.argmax(s)]
+
+    diff = np.diff(pts, axis=1)
+    # Top-right point will have the smallest difference.
+    rect[1] = pts[np.argmin(diff)]
+    # Bottom-left will have the largest difference.
+    rect[3] = pts[np.argmax(diff)]
+    # Return the ordered coordinates.
+    return rect
 
 
 def warp_image(image, pts, output_width=None, output_height=None, order_pts=False):

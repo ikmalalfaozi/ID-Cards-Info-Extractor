@@ -1,11 +1,10 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon
-import torch
-from capybara import Backend
-from docaligner import DocAligner, ModelType
-import src.image_alignment.polygon_interactor as poly_i
+
+from ..config import get_device, onnx_cuda_available
+from .image_transform import order_points  # noqa: F401  (tetap bisa diimpor dari sini untuk kompatibilitas)
+
+_NON_INTERACTIVE_BACKENDS = {"agg", "pdf", "ps", "svg", "cairo", "template"}
 
 
 def interactive_get_contour(corners, image):
@@ -13,6 +12,16 @@ def interactive_get_contour(corners, image):
     Displays an interactive image, allowing the user to adjust the corners,
     and scales the obtained corners back to the original image size.
     """
+
+    import matplotlib
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Polygon
+    from . import polygon_interactor as poly_i
+
+    if matplotlib.get_backend().lower() in _NON_INTERACTIVE_BACKENDS:
+        raise RuntimeError(
+            f"interactive=True membutuhkan backend matplotlib interaktif (saat ini '{matplotlib.get_backend()}', "
+            "mis. di Colab/Kaggle atau server tanpa layar). Pakai interactive=False atau jalankan secara lokal.")
 
     original_height, original_width = image.shape[:2]  # Store original image size
 
@@ -54,41 +63,32 @@ def interactive_get_contour(corners, image):
     return new_points.reshape(4, 2)
 
 
-def order_points(pts):
-    """
-    Order points in top-left, top-right, bottom-right, bottom-left order.
-
-    Args:
-        pts (numpy.ndarray): List of corner points.
-
-    Returns:
-        list: Ordered corner points.
-    """
-    rect = np.zeros((4, 2), dtype='float32')
-    s = pts.sum(axis=1)
-    # Top-left point will have the smallest sum.
-    rect[0] = pts[np.argmin(s)]
-    # Bottom-right point will have the largest sum.
-    rect[2] = pts[np.argmax(s)]
-
-    diff = np.diff(pts, axis=1)
-    # Top-right point will have the smallest difference.
-    rect[1] = pts[np.argmin(diff)]
-    # Bottom-left will have the largest difference.
-    rect[3] = pts[np.argmax(diff)]
-    # Return the ordered coordinates.
-    return rect
-
-
 class CornerDetector:
-    def __init__(self, model_type=ModelType.heatmap, model_cfg=None):
+    def __init__(self, model_type="heatmap", model_cfg=None, device=None):
         """
         Initialize the corner detector using the DocAligner library.
 
+        DocAligner is imported here (not at module level) so the rest of `image_alignment` works without it.
+
         Args:
-            model_type (ModelType): Type of model to use (heatmap or point).
+            model_type (str | docaligner.ModelType): "heatmap" or "point".
             model_cfg (str): Configuration for the model (e.g., 'lcnet100', 'fastvit_t8', 'fastvit_sa24').
+            device (str, optional): "cpu", "cuda" or None for automatic (see src.config.get_device).
+                DocAligner runs on onnxruntime: CUDA is used only when onnxruntime-gpu is installed.
         """
+        try:
+            from capybara import Backend
+            from docaligner import DocAligner, ModelType
+        except ImportError as e:
+            raise ImportError(
+                f"DocAligner tidak dapat diimpor ({e}). Pasang dengan: bash scripts/install.sh "
+                "(atau lihat docs/INSTALL.md, bagian DocAligner).") from e
+
+        if isinstance(model_type, str):
+            try:
+                model_type = ModelType[model_type]
+            except KeyError:
+                raise ValueError(f"Unsupported model type: {model_type!r} (use 'heatmap' or 'point').") from None
         if model_cfg is None:
             if model_type == ModelType.heatmap:
                 model_cfg = 'fastvit_sa24'  # Default for heatmap
@@ -97,13 +97,13 @@ class CornerDetector:
             else:
                 raise ValueError("Unsupported model type.")
 
-        # Determine the device automatically
-        if torch.cuda.is_available():
-            backend = Backend.cuda
-            print("CornerDetector: GPU (CUDA) is available. Using GPU.")
+        self.device = get_device(device)
+        use_cuda = self.device.startswith("cuda") and onnx_cuda_available()
+        backend = Backend.cuda if use_cuda else Backend.cpu
+        if self.device.startswith("cuda") and not use_cuda:
+            print("CornerDetector: onnxruntime-gpu tidak terpasang. DocAligner memakai CPU.")
         else:
-            backend = Backend.cpu
-            print("CornerDetector: GPU (CUDA) is not available. Using CPU.")
+            print(f"CornerDetector: using {'GPU (CUDA)' if use_cuda else 'CPU'}.")
 
         # Initialize the model
         self.model = DocAligner(model_type=model_type, model_cfg=model_cfg, backend=backend)

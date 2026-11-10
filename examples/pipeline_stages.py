@@ -113,18 +113,12 @@ def stage_nafnet(rgb, config="nafnet-options/NAFNet-GoPro-width32.yaml"):
     from src.nafnet.utils import parse, create_model, img2tensor, tensor2img
 
     opt = parse(os.path.join(ROOT, config))
-    opt["num_gpu"] = 0 if not _cuda() else opt.get("num_gpu", 1)
-    model = create_model(opt)
+    model = create_model(opt)  # device otomatis (GPU bila ada); paksa CPU: IDCARD_DEVICE=cpu
     bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
     model.feed_data({"lq": img2tensor(bgr).unsqueeze(0)})
     model.test()
     out_bgr = tensor2img(model.get_current_visuals()["result"])
     return cv2.cvtColor(out_bgr, cv2.COLOR_BGR2RGB)
-
-
-def _cuda():
-    import torch
-    return torch.cuda.is_available()
 
 
 # --------------------------------------------------------------------- 8. ocr

@@ -171,7 +171,15 @@ class FakePretrained:
     @classmethod
     def from_pretrained(cls, name, **kw):
         FakePretrained.calls.append((name, kw))
-        return object()
+        return FakeModule()
+
+
+class FakeModule:
+    device = None
+
+    def to(self, device):
+        self.device = device
+        return self
 
 
 @pytest.fixture
@@ -205,3 +213,8 @@ def test_donut_no_longer_writes_into_repo_models_dir(donut, tmp_path, monkeypatc
     monkeypatch.chdir(tmp_path)
     donut.DonutInfoExtractor()
     assert not (tmp_path / "models").exists()
+
+
+def test_donut_moves_model_to_requested_device_once(donut):
+    ex = donut.DonutInfoExtractor(device="cpu")
+    assert ex.device == "cpu" and ex.model.device == "cpu"
