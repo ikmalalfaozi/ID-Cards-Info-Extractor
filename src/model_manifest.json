@@ -2,8 +2,8 @@
   "schema": 1,
   "hub": {
     "repo_id": "ikmalalfaozi/id-cards-extractor-models",
-    "tag": "v1.0",
-    "revision": "51c07da430040d1d48c7eeb2f527adc731245751"
+    "tag": "v1.1",
+    "revision": "bc8414c110754330807f07ca111a417120058f3a"
   },
   "models": {
     "doc-seg": {
