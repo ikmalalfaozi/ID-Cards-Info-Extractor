@@ -265,3 +265,35 @@ def test_license_other_does_not_change_manifest_flow(env):
     run(env, ["--execute", "--license", "other", "--yolo-license", "AGPL-3.0", "--yes"], api=api)
     new = json.loads(env.mpath.read_text())
     assert new["hub"]["revision"] == OID and ms.manifest_issues(new) == []
+
+
+# ------------------------------------------------------------------ DocAligner
+def test_docaligner_files_get_license_row_source_link_and_license_text():
+    rows = [{"key": "doc-corner-heatmap-fastvit-sa24", "file": "docaligner/x.onnx", "size": 1, "sha256": "x"}]
+    lic = um.build_license_md(rows, "AGPL-3.0")
+    assert "docaligner/*.onnx" in lic and "Apache-2.0" in lic and "DocsaidLab/DocAligner" in lic
+    assert "LICENSES/DocAligner-LICENSE.txt" in lic and "yolo/*.pt" not in lic
+    assert "DocsaidLab/DocAligner" in um.build_model_card(rows, "u/r", "v1.1", "other")
+
+
+def test_docaligner_license_file_is_uploaded_only_with_docaligner_rows(env):
+    rows = [{"key": "a", "file": "yolo/a.pt", "path": env.yolo / "a.pt"}]
+    names = [o.path_in_repo for o in um.build_operations(rows, "card", "MIT", None, "APACHE")]
+    assert um.DOCALIGNER_LICENSE_PATH in names
+    names = [o.path_in_repo for o in um.build_operations(rows, "card", "MIT", None, None)]
+    assert um.DOCALIGNER_LICENSE_PATH not in names
+
+
+def test_docaligner_license_fetch_uses_docaligner_url():
+    seen = []
+
+    class R:
+        def __enter__(self): return self
+        def __exit__(self, *a): pass
+        def read(self): return b"Apache License"
+
+    def opener(url, timeout):
+        seen.append(url)
+        return R()
+
+    assert um.fetch_docaligner_license(opener) == "Apache License" and seen == [um.DOCALIGNER_LICENSE_URL]

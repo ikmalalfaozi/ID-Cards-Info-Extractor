@@ -31,6 +31,9 @@ from src import model_store as ms  # noqa: E402
 
 NAFNET_LICENSE_URL = "https://raw.githubusercontent.com/megvii-research/NAFNet/main/LICENSE"
 NAFNET_REPO_URL = "https://github.com/megvii-research/NAFNet"
+DOCALIGNER_LICENSE_URL = "https://raw.githubusercontent.com/DocsaidLab/DocAligner/main/LICENSE"
+DOCALIGNER_REPO_URL = "https://github.com/DocsaidLab/DocAligner"
+DOCALIGNER_LICENSE_PATH = "LICENSES/DocAligner-LICENSE.txt"
 DEFAULT_WORKDIR = Path.home() / ".cache" / "idcard_extractor" / "upload"
 
 
@@ -93,9 +96,13 @@ def gather(manifest: Dict[str, Any], yolo_dir: Path, workdir: Path, only: Option
 
 
 # --------------------------------------------------------------------- konten
-def fetch_license_text(opener: Callable[..., Any] = urllib.request.urlopen) -> str:
-    with opener(NAFNET_LICENSE_URL, timeout=30) as r:
+def fetch_license_text(opener: Callable[..., Any] = urllib.request.urlopen, url: str = NAFNET_LICENSE_URL) -> str:
+    with opener(url, timeout=30) as r:
         return r.read().decode("utf-8")
+
+
+def fetch_docaligner_license(opener: Callable[..., Any] = urllib.request.urlopen) -> str:
+    return fetch_license_text(opener, DOCALIGNER_LICENSE_URL)
 
 
 LICENSE_NAME_OTHER = "per-file-license"
@@ -115,6 +122,12 @@ def build_license_md(rows: List[Dict[str, Any]], yolo_license: str, yolo_license
                      f"Bobot resmi dari penulis ([megvii-research/NAFNet]({NAFNET_REPO_URL})), tidak dimodifikasi. "
                      "Penulis tidak menyebut lisensi bobot secara terpisah. Teks: "
                      "`LICENSES/NAFNet-and-BasicSR-LICENSE.txt`. |")
+    if any(r["file"].startswith("docaligner/") for r in rows):
+        lines.append("| `docaligner/*.onnx` | Apache-2.0 (DocAligner, DocsaidLab) | "
+                     f"Bobot resmi dari penulis ([DocsaidLab/DocAligner]({DOCALIGNER_REPO_URL})), tidak dimodifikasi. "
+                     "Penulis tidak menyebut lisensi bobot maupun data latih secara terpisah; kode dan paketnya "
+                     f"Apache-2.0. Backbone FastViT berasal dari apple/ml-fastvit yang memakai lisensi Apple sendiri. "
+                     f"Teks: `{DOCALIGNER_LICENSE_PATH}`. |")
     return "\n".join(lines) + "\n"
 
 
@@ -132,6 +145,7 @@ tags:
 - yolo
 - nafnet
 - document-detection
+- document-alignment
 - ocr
 - indonesia
 ---
@@ -159,6 +173,11 @@ Rilis: `{tag}`. Repo ini dipakai oleh `src/model_store.py` dengan commit sha dan
   (megvii-model, 2022) dengan bagian BasicSR berlisensi Apache-2.0; teks lisensinya ada di
   `LICENSES/NAFNet-and-BasicSR-LICENSE.txt`. Penulis tidak menyebut lisensi bobot secara terpisah.
   Rujukan: Chen dkk., "Simple Baselines for Image Restoration", ECCV 2022.
+- `docaligner/*.onnx`: bobot resmi **DocAligner** dari penulis aslinya ([DocsaidLab/DocAligner]({DOCALIGNER_REPO_URL}),
+  Apache-2.0), tidak dimodifikasi, untuk deteksi 4 sudut dokumen (heatmap: `fastvit_sa24`, `fastvit_t8`, `lcnet100`;
+  point: `lcnet050`). Disalin ulang di sini agar dapat diunduh tanpa Google Drive. Penulis tidak menyebut lisensi bobot
+  maupun data latih secara terpisah; teks lisensi kode ada di `LICENSES/DocAligner-LICENSE.txt`. Dijalankan langsung
+  dengan onnxruntime (`src/image_alignment/corner_model.py`). Rujukan: Yuan, "DocAligner", 2023 (repo GitHub di atas).
 - Model OCR Donut tidak ada di repo ini (`ikmalalfaozi/donut-base-finetuned-ktp-sim-passport-v3`).
 
 ## Pemakaian
@@ -171,13 +190,16 @@ path = ensure_model("doc-seg")             # mengunduh dari {repo_id} pada revis
 
 
 def build_operations(rows: List[Dict[str, Any]], readme: str, license_text: str,
-                     license_md: Optional[str] = None) -> list:
+                     license_md: Optional[str] = None, docaligner_license: Optional[str] = None) -> list:
     from huggingface_hub import CommitOperationAdd
 
     ops = [CommitOperationAdd(path_in_repo=r["file"], path_or_fileobj=str(r["path"])) for r in rows]
     ops.append(CommitOperationAdd(path_in_repo="README.md", path_or_fileobj=readme.encode("utf-8")))
     ops.append(CommitOperationAdd(path_in_repo="LICENSES/NAFNet-and-BasicSR-LICENSE.txt",
                                   path_or_fileobj=license_text.encode("utf-8")))
+    if docaligner_license:
+        ops.append(CommitOperationAdd(path_in_repo=DOCALIGNER_LICENSE_PATH,
+                                      path_or_fileobj=docaligner_license.encode("utf-8")))
     if license_md:
         ops.append(CommitOperationAdd(path_in_repo=LICENSE_LINK_OTHER, path_or_fileobj=license_md.encode("utf-8")))
     return ops
@@ -230,7 +252,8 @@ def print_plan(rows: List[Dict[str, Any]], repo_id: str, tag: str) -> None:
 
 # ------------------------------------------------------------------------ main
 def main(argv: Optional[List[str]] = None, api: Any = None, license_fetcher: Callable[[], str] = fetch_license_text,
-         confirm: Callable[[str], str] = input) -> int:
+         confirm: Callable[[str], str] = input,
+         docaligner_license_fetcher: Callable[[], str] = fetch_docaligner_license) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--repo-id", help="default: hub.repo_id di manifest")
     ap.add_argument("--tag", help="default: hub.tag di manifest")
@@ -291,7 +314,8 @@ def main(argv: Optional[List[str]] = None, api: Any = None, license_fetcher: Cal
 
     readme = build_model_card(rows, repo_id, tag, args.license_id)
     license_md = build_license_md(rows, args.yolo_license, args.yolo_license_link) if args.license_id == "other" else None
-    oid = publish(api, repo_id, tag, build_operations(rows, readme, license_fetcher(), license_md))
+    docaligner_license = docaligner_license_fetcher() if any(r["file"].startswith("docaligner/") for r in rows) else None
+    oid = publish(api, repo_id, tag, build_operations(rows, readme, license_fetcher(), license_md, docaligner_license))
     print(f"Commit: {oid}")
 
     problems = verify_remote(api, repo_id, oid, rows)
