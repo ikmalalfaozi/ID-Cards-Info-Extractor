@@ -82,11 +82,14 @@ Pemilihan device dipusatkan di `src/config.py` (`get_device`). Prioritas: argume
 `IDCARD_DEVICE` (`auto`, `cpu`, `cuda`, `cuda:N`) > otomatis (CUDA bila ada). Meminta CUDA tanpa GPU tidak menggagalkan
 proses: dipakai CPU dengan peringatan. Contoh paksa CPU: `IDCARD_DEVICE=cpu python examples/pipeline_stages.py ...`.
 
-DocAligner berjalan lewat onnxruntime, bukan torch: GPU dipakai hanya bila `onnxruntime-gpu` terpasang
-(`requirements/onnx-gpu.txt`); selain itu `CornerDetector` memakai CPU dan mencetak pemberitahuan.
+`CornerDetector(model_type="heatmap", model_cfg=None)` menjalankan model DocAligner langsung lewat onnxruntime
+(tanpa paket `docaligner`/`capybara`). Varian: heatmap `fastvit_sa24` (bawaan), `fastvit_t8`, `lcnet100`; point `lcnet050`.
+Model terdaftar di manifest (`doc-corner-*`) dan diunduh otomatis saat pertama dipakai. Runtime-nya onnxruntime,
+bukan torch: GPU dipakai hanya bila `onnxruntime-gpu` terpasang (`requirements/onnx-gpu.txt`); selain itu CPU dan
+mencetak pemberitahuan.
 
-DocAligner dan matplotlib diimpor malas: `import src.image_alignment` (deteksi dokumen, warp, orientasi) berhasil
-walaupun DocAligner belum terpasang; `CornerDetector()` baru memberi `ImportError` berisi perintah instalasi saat dibuat.
+onnxruntime dan matplotlib diimpor malas: `import src.image_alignment` (deteksi dokumen, warp, orientasi) berhasil
+walaupun keduanya belum terpasang; `CornerDetector()` baru memberi `ImportError` berisi perintah instalasi saat dibuat.
 Mode `interactive=True` membutuhkan backend matplotlib interaktif (tidak jalan di Colab/Kaggle).
 
 ## Model

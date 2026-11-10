@@ -1,4 +1,4 @@
-"""F4/F5: paket image_alignment tidak boleh bergantung pada DocAligner/matplotlib saat diimpor."""
+"""F4/F5: paket image_alignment tidak boleh bergantung pada DocAligner/capybara/matplotlib/onnxruntime saat diimpor."""
 import subprocess
 import sys
 import textwrap
@@ -15,30 +15,30 @@ def run_python(code):
     return subprocess.run([sys.executable, "-c", textwrap.dedent(code)], cwd=ROOT, capture_output=True, text=True)
 
 
-def with_block(code):
-    return textwrap.dedent(BLOCK) + textwrap.dedent(code)
+def with_block(code, blocked=("docaligner", "capybara", "matplotlib", "onnxruntime")):
+    return textwrap.dedent(BLOCK).replace("BLOCKED", repr(set(blocked))) + textwrap.dedent(code)
 
 
 BLOCK = """
 import sys
 class Block:
     def find_spec(self, name, path=None, target=None):
-        if name.split('.')[0] in {'docaligner', 'capybara', 'matplotlib'}:
+        if name.split('.')[0] in BLOCKED:
             raise ImportError(f'diblokir untuk uji: {name}')
 sys.meta_path.insert(0, Block())
 """
 
 
-def test_image_alignment_imports_without_docaligner_and_matplotlib():
+def test_image_alignment_imports_without_optional_dependencies():
     r = run_python(with_block("""
-        from src.image_alignment import DocDetector, DocOrientationDetector, warp_image, order_points
+        from src.image_alignment import DocDetector, DocOrientationDetector, CornerDetector, warp_image, order_points
         import src.image_alignment.corner_detector as cd   # modulnya sendiri juga harus bisa diimpor
         print('ok')
     """))
     assert r.returncode == 0 and "ok" in r.stdout, r.stderr[-800:]
 
 
-def test_corner_detector_gives_actionable_error_without_docaligner():
+def test_corner_detector_gives_actionable_error_without_onnxruntime():
     r = run_python(with_block("""
         from src.image_alignment import CornerDetector
         try:
@@ -46,15 +46,20 @@ def test_corner_detector_gives_actionable_error_without_docaligner():
         except ImportError as e:
             print('ImportError:', e)
     """))
-    assert "ImportError: DocAligner tidak dapat diimpor" in r.stdout and "scripts/install.sh" in r.stdout, r.stdout + r.stderr[-500:]
+    assert "ImportError: onnxruntime tidak terpasang" in r.stdout and "pip install onnxruntime" in r.stdout, r.stdout + r.stderr[-500:]
 
 
-def test_lazy_names_resolve_when_dependencies_exist():
-    pytest.importorskip("matplotlib")
-    from src import image_alignment as ia
-    assert callable(ia.interactive_get_contour)
-    with pytest.raises(AttributeError):
-        ia.tidak_ada
+def test_corner_detector_does_not_need_docaligner_package():
+    """DocAligner/capybara tidak lagi dibutuhkan: onnxruntime ada, model lokal diberi eksplisit (tidak ada -> bukan ImportError)."""
+    pytest.importorskip("onnxruntime")
+    r = run_python(with_block("""
+        from src.image_alignment import CornerDetector
+        try:
+            CornerDetector(model_path='tidak-ada.onnx', device='cpu')
+        except Exception as e:
+            print(type(e).__name__)
+    """, blocked=("docaligner", "capybara", "matplotlib")))
+    assert "ImportError" not in r.stdout, r.stdout + r.stderr[-500:]
 
 
 def test_order_points_lives_in_image_transform_and_is_reexported():
