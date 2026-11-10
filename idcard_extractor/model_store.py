@@ -180,7 +180,7 @@ def resolve_model_path(name: str, *, model_path: Optional[str] = None, model_sav
     Tanpa override -> model terkelola `name` lewat ensure_model(). `google_drive_file_id` sudah tidak dipakai.
     """
     if google_drive_file_id is not None:
-        warnings.warn("google_drive_file_id sudah tidak dipakai; model diunduh lewat manifest (src/model_manifest.json).",
+        warnings.warn("google_drive_file_id sudah tidak dipakai; model diunduh lewat manifest (idcard_extractor/model_manifest.json).",
                       DeprecationWarning, stacklevel=3)
     explicit = model_path or model_save_path
     if explicit:

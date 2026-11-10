@@ -71,7 +71,7 @@ class CornerDetector:
             model_type (str): "heatmap" (default) or "point".
             model_cfg (str, optional): heatmap: 'fastvit_sa24' (default), 'fastvit_t8', 'lcnet100'; point: 'lcnet050'.
             model_path (str, optional): local ONNX file to use instead of the managed model.
-            device (str, optional): "cpu", "cuda" or None for automatic (see src.config.get_device).
+            device (str, optional): "cpu", "cuda" or None for automatic (see idcard_extractor.config.get_device).
                 With backend="onnx", CUDA is used only when onnxruntime-gpu is installed.
             backend (str): "onnx" (default, onnxruntime) or "torch" (onnx2torch, see requirements/torch-backend.txt;
                 same corners, slower on CPU).

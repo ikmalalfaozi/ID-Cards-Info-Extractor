@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "idcard-extractor"
+version = "0.1.0"
+description = "Ekstraksi informasi dari ID card (KTP/SIM/Paspor): deteksi dokumen, alignment, restorasi NAFNet, OCR Donut"
+requires-python = ">=3.10,<3.14"
+dynamic = ["dependencies", "optional-dependencies"]
+
+# Dependensi dibaca dari requirements/ agar hanya ada satu sumber. torch/torchvision sengaja tidak dicantumkan
+# (sudah ada di Colab/Kaggle); lihat docs/INSTALL.md. Pilih satu ONNX Runtime lewat extra [onnx-cpu] atau [onnx-gpu].
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements/base.txt"] }
+
+[tool.setuptools.dynamic.optional-dependencies]
+onnx-cpu = { file = ["requirements/onnx-cpu.txt"] }
+onnx-gpu = { file = ["requirements/onnx-gpu.txt"] }
+torch-backend = { file = ["requirements/torch-backend.txt"] }
+demo = { file = ["requirements/demo.txt"] }
+dev = { file = ["requirements/dev.txt"] }
+
+[tool.setuptools.packages.find]
+include = ["idcard_extractor*"]
+
+[tool.setuptools.package-data]
+idcard_extractor = ["model_manifest.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

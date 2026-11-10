@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 import torch
 
-import src.ocr.donut as d
+import idcard_extractor.ocr.donut as d
 
 
 class FakeTokenizer:

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Instalasi dependensi untuk Linux / Colab / Kaggle (Windows: lihat docs/INSTALL.md).
 #   bash scripts/install.sh [auto|cpu|gpu]
-# DocAligner dijalankan langsung lewat onnxruntime (src/image_alignment/corner_model.py): tidak ada lagi paket
+# DocAligner dijalankan langsung lewat onnxruntime (idcard_extractor/image_alignment/corner_model.py): tidak ada lagi paket
 # docaligner/capybara, libturbojpeg, atau pyheif yang harus dipasang.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -37,7 +37,7 @@ $PIP install -r requirements/base.txt -r "requirements/onnx-$ONNX.txt"
 python - <<'PY'
 import numpy, torch, cv2
 import onnxruntime as ort
-from src.image_alignment import CornerDetector, warp_image
+from idcard_extractor.image_alignment import CornerDetector, warp_image
 print("numpy", numpy.__version__, "| torch", torch.__version__, "| cv2", cv2.__version__)
 print("onnxruntime providers:", ort.get_available_providers())
 print("OK: modul image_alignment dapat diimpor")

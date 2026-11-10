@@ -11,7 +11,7 @@ class DocDetector:
         """
         Initialize the document detector.
         By default the model ("doc-seg") is resolved through the model manifest (Hugging Face, pinned
-        revision, checksum verified). Uses the GPU if available, otherwise CPU (see src.config.get_device).
+        revision, checksum verified). Uses the GPU if available, otherwise CPU (see idcard_extractor.config.get_device).
 
         Args:
             google_drive_file_id: Deprecated and ignored (kept for backward compatibility).

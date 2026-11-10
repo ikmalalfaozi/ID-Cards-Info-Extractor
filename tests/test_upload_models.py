@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from src import model_store as ms
+from idcard_extractor import model_store as ms
 
 SPEC = importlib.util.spec_from_file_location("upload_models", Path(__file__).resolve().parents[1] / "scripts" / "upload_models.py")
 um = importlib.util.module_from_spec(SPEC)

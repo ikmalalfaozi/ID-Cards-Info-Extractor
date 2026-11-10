@@ -1,4 +1,4 @@
-"""Pengujian src/model_store.py tanpa jaringan (hf_hub_download dan gdown diganti versi palsu)."""
+"""Pengujian idcard_extractor/model_store.py tanpa jaringan (hf_hub_download dan gdown diganti versi palsu)."""
 import copy
 import hashlib
 import os
@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from src import model_store as ms
+from idcard_extractor import model_store as ms
 
 CONTENT = b"bobot-palsu-untuk-uji"
 SHA = hashlib.sha256(CONTENT).hexdigest()
