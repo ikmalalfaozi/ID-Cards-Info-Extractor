@@ -4,8 +4,18 @@ Python 3.10-3.13 (3.11 dan 3.13 diuji penuh; Colab saat ini memakai 3.13).
 
 ## Ringkasan
 
+Paket Python bernama **`idcard_extractor`** (sebelumnya `src`). Pasang dari root repo:
+
+```bash
+pip install -e ".[onnx-cpu]"        # atau ".[onnx-gpu]"; extras lain: torch-backend, demo, dev
+python -m idcard_extractor.smoke    # smoke test (impor, device, model, detektor)
+```
+
+Impor: `from idcard_extractor.image_alignment import DocDetector, CornerDetector, warp_image`. Konfigurasi NAFNet
+(`nafnet-options/*.yaml`) dan contoh (`examples/`) tidak ikut terpasang sebagai paket; pakai dari clone repo.
+
 `pip install -r requirements.txt` cukup untuk dependensi runtime (CPU). DocAligner tidak lagi dipasang sebagai paket:
-modelnya dijalankan langsung lewat onnxruntime (`src/image_alignment/corner_model.py`), jadi tidak ada pin
+modelnya dijalankan langsung lewat onnxruntime (`idcard_extractor/image_alignment/corner_model.py`), jadi tidak ada pin
 `capybara`/`docaligner`, `libturbojpeg`, atau `pyheif`. `scripts/install.sh` hanya menambah torch bila belum ada dan
 memilih onnxruntime CPU/GPU.
 
@@ -19,6 +29,9 @@ memilih onnxruntime CPU/GPU.
   (jalur GPU juga belum dijalankan, hanya di-resolve).
 
 ## Colab / Kaggle
+
+Notebook siap pakai: `notebooks/colab_kaggle_smoke.ipynb` (clone, `pip install -e ".[onnx-cpu]"`, smoke test).
+Langkah manual:
 
 Aktifkan GPU (opsional), lalu jalankan di sel pertama:
 
@@ -63,7 +76,7 @@ Tidak ada langkah tambahan: semua dependensi berupa wheel PyPI. Belum dijalankan
 
 ## Device (GPU/CPU)
 
-Pemilihan device dipusatkan di `src/config.py` (`get_device`). Prioritas: argumen `device=` pada kelas
+Pemilihan device dipusatkan di `idcard_extractor/config.py` (`get_device`). Prioritas: argumen `device=` pada kelas
 (`DocDetector`, `DocOrientationDetector`, `CornerDetector`, `DonutInfoExtractor`, `create_model`) > variabel lingkungan
 `IDCARD_DEVICE` (`auto`, `cpu`, `cuda`, `cuda:N`) > otomatis (CUDA bila ada). Meminta CUDA tanpa GPU tidak menggagalkan
 proses: dipakai CPU dengan peringatan. Contoh paksa CPU: `IDCARD_DEVICE=cpu python examples/pipeline_stages.py ...`.
@@ -79,7 +92,7 @@ Backend torch (opsional): `CornerDetector(backend="torch")` menjalankan model ya
 Diuji di CPU: sudut model heatmap identik dengan onnxruntime, model `point` selisih <= 0,0012 piksel; torch
 lebih lambat (heatmap sekitar 1,2-1,6x, `point` sekitar 12x). GPU dan dataset laporan belum diuji. Bawaannya tetap `onnx`.
 
-onnxruntime dan matplotlib diimpor malas: `import src.image_alignment` (deteksi dokumen, warp, orientasi) berhasil
+onnxruntime dan matplotlib diimpor malas: `import idcard_extractor.image_alignment` (deteksi dokumen, warp, orientasi) berhasil
 walaupun keduanya belum terpasang; `CornerDetector()` baru memberi `ImportError` berisi perintah instalasi saat dibuat.
 Mode `interactive=True` membutuhkan backend matplotlib interaktif (tidak jalan di Colab/Kaggle).
 
@@ -106,8 +119,8 @@ Model tidak disimpan di git. Semuanya diunduh otomatis pada pemakaian pertama da
 
 | Model | Sumber | Dipin lewat |
 |---|---|---|
-| YOLO (`doc-seg`, `doc-oc`, `doc-type-cls`), bobot NAFNet/NAFSSR (7), dan DocAligner (`doc-corner-*`, 4 ONNX) | repo Hugging Face `ikmalalfaozi/id-cards-extractor-models` (publik, tag `v1.1`) | commit sha + sha256 di `src/model_manifest.json` |
-| Donut (OCR, ~777 MB) | repo Hugging Face `ikmalalfaozi/donut-base-finetuned-ktp-sim-passport-v3` | commit sha di `src/model_manifest.json` |
+| YOLO (`doc-seg`, `doc-oc`, `doc-type-cls`), bobot NAFNet/NAFSSR (7), dan DocAligner (`doc-corner-*`, 4 ONNX) | repo Hugging Face `ikmalalfaozi/id-cards-extractor-models` (publik, tag `v1.1`) | commit sha + sha256 di `idcard_extractor/model_manifest.json` |
+| Donut (OCR, ~777 MB) | repo Hugging Face `ikmalalfaozi/donut-base-finetuned-ktp-sim-passport-v3` | commit sha di `idcard_extractor/model_manifest.json` |
 
 Unduhan disimpan di cache Hugging Face (`~/.cache/huggingface`, atau `HF_HOME`), sehingga berkas yang tidak berubah antar rilis
 tidak diunduh ulang. Folder `models/` di repo tidak lagi dipakai.
@@ -127,7 +140,7 @@ Memakai model sendiri tanpa mengubah manifest: `DocDetector(model_path="...")`, 
 Menyiapkan semua model sebelum offline, dan memeriksa integritasnya:
 
 ```python
-from src.model_store import verify_all
+from idcard_extractor.model_store import verify_all
 print(verify_all())                 # {'doc-seg': 'ok', ...}; jalankan dengan internet sekali
 ```
 

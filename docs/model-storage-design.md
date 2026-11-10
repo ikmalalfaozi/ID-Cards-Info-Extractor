@@ -32,7 +32,7 @@ nafnet/*.pth
 ```
 DocAligner (`.onnx`) tidak dikelola di sini: diunduh oleh paket `docaligner` sendiri saat pertama dipakai, jadi perlu internet pada penggunaan pertama.
 
-## 3. Manifest (`src/model_manifest.json`, dilacak di git)
+## 3. Manifest (`idcard_extractor/model_manifest.json`, dilacak di git)
 
 Sumber kebenaran tunggal untuk versi. Diperbarui oleh skrip unggah, di-review lewat git.
 
@@ -70,7 +70,7 @@ Aturan:
 - `sha256` memverifikasi isi file setelah diunduh. Nilai `size` dan `sha256` untuk `doc-*` sudah dapat diisi dari berkas lokal; ID Drive diambil dari kode/YAML yang ada. Nilai lain diisi skrip unggah.
 - Pin ganda (revision + sha256) juga melindungi dari repo HF yang terkompromi: file `.pt`/`.pth` berformat pickle, jadi file yang diubah tidak boleh dimuat.
 
-## 4. Komponen: `src/model_store.py`
+## 4. Komponen: `idcard_extractor/model_store.py`
 
 ```python
 def ensure_model(name: str, *, offline: bool | None = None, verify: bool = True) -> Path:
@@ -110,12 +110,12 @@ Keputusan desain:
 
 | File | Perubahan |
 |---|---|
-| `src/image_alignment/doc_detector.py` | `__init__(self, model_path=None)`; `None` -> `ensure_model("doc-seg")`. `model_save_path` tetap diterima sebagai alias (override lokal); `google_drive_file_id` diterima tetapi diabaikan dengan `DeprecationWarning`. Hapus blok unduhan `gdown` |
-| `src/image_alignment/orientation.py` | sama, kunci `doc-oc` |
-| `src/utils.py` | tambah `load_doc_type_model(model_path=None) -> YOLO` (kunci `doc-type-cls`) |
-| `src/nafnet/model.py` | `path.pretrain_model` (kunci manifest) dipakai bila ada; `path.pretrain_network_g` tetap sebagai override lokal eksplisit. Hapus blok `gdown`. (Bug `opt['dist']` dibereskan bersamaan, lihat `docs/portability-design.md` F6) |
+| `idcard_extractor/image_alignment/doc_detector.py` | `__init__(self, model_path=None)`; `None` -> `ensure_model("doc-seg")`. `model_save_path` tetap diterima sebagai alias (override lokal); `google_drive_file_id` diterima tetapi diabaikan dengan `DeprecationWarning`. Hapus blok unduhan `gdown` |
+| `idcard_extractor/image_alignment/orientation.py` | sama, kunci `doc-oc` |
+| `idcard_extractor/utils.py` | tambah `load_doc_type_model(model_path=None) -> YOLO` (kunci `doc-type-cls`) |
+| `idcard_extractor/nafnet/model.py` | `path.pretrain_model` (kunci manifest) dipakai bila ada; `path.pretrain_network_g` tetap sebagai override lokal eksplisit. Hapus blok `gdown`. (Bug `opt['dist']` dibereskan bersamaan, lihat `docs/portability-design.md` F6) |
 | `nafnet-options/*.yaml` (7) | ganti `pretrain_network_g` + `pretrain_network_g_gdrive_id` dengan `pretrain_model: <kunci>` |
-| `src/ocr/donut.py` | `DonutInfoExtractor(model_name=None, revision=None)` default dari `external_revision("donut")`; `download_model(..., revision, cache_dir=None)` meneruskan `revision=` ke `from_pretrained`; default cache = cache HF (tidak lagi `./models`) |
+| `idcard_extractor/ocr/donut.py` | `DonutInfoExtractor(model_name=None, revision=None)` default dari `external_revision("donut")`; `download_model(..., revision, cache_dir=None)` meneruskan `revision=` ke `from_pretrained`; default cache = cache HF (tidak lagi `./models`) |
 | `examples/pipeline_stages.py` | `stage_filter` memakai `load_doc_type_model()` |
 | `.gitignore` | `models/` (setelah file `.pt` dikeluarkan dari working tree) |
 | `docs/INSTALL.md` | bagian "Model": lokasi cache, variabel lingkungan, mode offline |
@@ -130,7 +130,7 @@ Dijalankan **oleh pemilik repo** (butuh token tulis HF: `huggingface-cli login`)
 2. Hitung `sha256` dan `size` tiap berkas.
 3. Buat repo HF (publik) bila belum ada; `upload_folder` memakai struktur di bagian 2, termasuk `README.md` (model card) dan `LICENSES/`.
 4. `create_tag(v1.0)`, ambil commit sha dari tag.
-5. Tulis ulang `src/model_manifest.json` (revision, sha256, size) dan cetak diff; pengguna meng-commit manifest di git.
+5. Tulis ulang `idcard_extractor/model_manifest.json` (revision, sha256, size) dan cetak diff; pengguna meng-commit manifest di git.
 6. Rilis berikutnya (`v1.1`): hanya berkas yang berubah diunggah; manifest memakai sha baru; berkas yang tidak berubah tidak diunduh ulang di klien karena cache berbasis konten.
 
 Model card memuat sumber dan lisensi: NAFNet MIT (megvii-model, 2022) dengan bagian BasicSR Apache-2.0, tautan ke repo asli, dan catatan bahwa lisensi bobot tidak disebut terpisah oleh penulisnya.

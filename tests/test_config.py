@@ -1,10 +1,10 @@
-"""Pemilihan device terpusat (src.config) dan penerusannya ke kelas-kelas."""
+"""Pemilihan device terpusat (idcard_extractor.config) dan penerusannya ke kelas-kelas."""
 import warnings
 
 import pytest
 import torch
 
-from src import config
+from idcard_extractor import config
 
 
 def test_auto_follows_cuda_availability(monkeypatch):

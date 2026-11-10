@@ -1,0 +1,2 @@
+include requirements/*.txt
+include idcard_extractor/model_manifest.json

@@ -60,7 +60,7 @@ def create_model(opt, device=None):
     Args:
         opt (dict): Configuration. It contains:
             model_type (str): Model type.
-        device (str, optional): "cpu", "cuda" or None for automatic (see src.config.get_device).
+        device (str, optional): "cpu", "cuda" or None for automatic (see idcard_extractor.config.get_device).
     """
     model_type = opt['model_type']
     if model_type == 'ImageRestorationModel':

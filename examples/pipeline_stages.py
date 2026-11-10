@@ -17,7 +17,7 @@ import numpy as np
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, ROOT)  # supaya `from src...` jalan tanpa PYTHONPATH
+sys.path.insert(0, ROOT)  # supaya `from idcard_extractor...` jalan tanpa PYTHONPATH
 
 STAGES = ["detect", "corners", "warp", "orientation", "filter", "preprocess", "nafnet", "ocr"]
 
@@ -31,7 +31,7 @@ def save(out_dir, name, rgb):
 # ----------------------------------------------------------------- 1. detect
 def stage_detect(rgb):
     """YOLO-seg: temukan dokumen dan mask-nya. Satu gambar bisa berisi >1 dokumen."""
-    from src.image_alignment import DocDetector
+    from idcard_extractor.image_alignment import DocDetector
 
     detections = DocDetector().detect_and_segment(rgb, conf=0.5)
     if not detections:
@@ -49,7 +49,7 @@ def stage_corners(rgb, mask):
     `mask` opsional; dipakai sebagai cadangan bila DocAligner memberi <4 titik.
     Gunakan interactive=True untuk menggeser sudut manual (butuh matplotlib GUI).
     """
-    from src.image_alignment import CornerDetector
+    from idcard_extractor.image_alignment import CornerDetector
 
     corners = CornerDetector().detect_corners(rgb, mask=mask, interactive=False)
     print(f"    sudut: {np.round(corners).astype(int).tolist()}")
@@ -59,7 +59,7 @@ def stage_corners(rgb, mask):
 # ------------------------------------------------------------------ 3. warp
 def stage_warp(rgb, corners):
     """Transformasi perspektif -> dokumen tampak lurus dari depan."""
-    from src.image_alignment import warp_image
+    from idcard_extractor.image_alignment import warp_image
 
     warped = warp_image(rgb, corners)  # order_pts=True bila sudut belum terurut
     print(f"    ukuran hasil warp (H, W): {warped.shape[:2]}")
@@ -69,7 +69,7 @@ def stage_warp(rgb, corners):
 # -------------------------------------------------------------- 4. orientation
 def stage_orientation(rgb):
     """Klasifikasi rotasi ('0','90','180','270') lalu putar ke posisi tegak."""
-    from src.image_alignment import DocOrientationDetector
+    from idcard_extractor.image_alignment import DocOrientationDetector
 
     detector = DocOrientationDetector()
     label = detector.detect_orientation(rgb)
@@ -80,7 +80,7 @@ def stage_orientation(rgb):
 # ----------------------------------------------------------------- 5. filter
 def stage_filter(rgb):
     """Filter jenis dokumen: KTP / SIM / Passport / Other."""
-    from src.utils import classify_document_type, load_doc_type_model
+    from idcard_extractor.utils import classify_document_type, load_doc_type_model
 
     result = classify_document_type(load_doc_type_model(), rgb)
     print(f"    jenis: {result['class']} (p={result['probability']:.2f})")
@@ -91,10 +91,10 @@ def stage_filter(rgb):
 def stage_preprocess(rgb):
     """Contrast enhancement -> denoising -> deblurring.
 
-    Pilih satu metode per langkah; yang lain tersedia di src/preprocessing/
+    Pilih satu metode per langkah; yang lain tersedia di idcard_extractor/preprocessing/
     (msrcp, equalize_histogram, median/NLM/TV/wavelet, richardson_lucy_deblur, ...).
     """
-    from src.preprocessing import apply_clahe, bilateral_filter_denoising, wiener_deblur, create_gaussian_psf
+    from idcard_extractor.preprocessing import apply_clahe, bilateral_filter_denoising, wiener_deblur, create_gaussian_psf
 
     out = apply_clahe(rgb, clip_limit=2.0, tile_grid_size=(8, 8))
     out = bilateral_filter_denoising(out, d=9, sigma_color=75, sigma_space=75)
@@ -110,7 +110,7 @@ def stage_nafnet(rgb, config="nafnet-options/NAFNet-GoPro-width32.yaml"):
 
     Bobot (kunci `pretrain_model` di YAML) diunduh dari Hugging Face dan diverifikasi sha256 saat pertama kali dipakai.
     """
-    from src.nafnet.utils import parse, create_model, img2tensor, tensor2img
+    from idcard_extractor.nafnet.utils import parse, create_model, img2tensor, tensor2img
 
     opt = parse(os.path.join(ROOT, config))
     model = create_model(opt)  # device otomatis (GPU bila ada); paksa CPU: IDCARD_DEVICE=cpu
@@ -125,7 +125,7 @@ def stage_nafnet(rgb, config="nafnet-options/NAFNet-GoPro-width32.yaml"):
 def stage_ocr(rgb):
     """Donut: gambar -> JSON field. Model (~777 MB) diunduh ke cache Hugging Face (HF_HOME) pada commit yang dipin."""
     from transformers.utils import logging as hf_logging
-    from src.ocr import DonutInfoExtractor
+    from idcard_extractor.ocr import DonutInfoExtractor
 
     hf_logging.set_verbosity_error()  # sembunyikan dump config & peringatan processor dari transformers
     return DonutInfoExtractor().predict(Image.fromarray(rgb))

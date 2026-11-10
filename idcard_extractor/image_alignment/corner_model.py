@@ -13,7 +13,7 @@ from ..model_store import resolve_model_path
 _INPUT_SIZE = (256, 256)  # (tinggi, lebar); sama untuk semua varian
 _HEATMAP_THRESHOLD = 0.3
 
-# model_type -> {model_cfg: nama di src/model_manifest.json}; elemen pertama = bawaan
+# model_type -> {model_cfg: nama di idcard_extractor/model_manifest.json}; elemen pertama = bawaan
 MODELS = {
     "heatmap": {
         "fastvit_sa24": "doc-corner-heatmap-fastvit-sa24",

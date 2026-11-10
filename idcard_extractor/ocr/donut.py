@@ -19,7 +19,7 @@ class DonutInfoExtractor:
         """
         Initialize DonutInfoExtractor with the Donut model.
 
-        By default the model and the pinned commit come from the model manifest (src/model_manifest.json).
+        By default the model and the pinned commit come from the model manifest (idcard_extractor/model_manifest.json).
         The defaults reproduce the thesis setup (fp32, beam search 3, max_length = model limit); every option below
         trades speed against fidelity and should be validated (e.g. CER) before use.
 
@@ -27,7 +27,7 @@ class DonutInfoExtractor:
         model_name (str, optional): Hugging Face repo id of the Donut model.
         revision (str, optional): Commit/tag to load. Only the default model is pinned automatically;
             for another `model_name` the latest revision is used unless `revision` is given.
-        device (str, optional): "cpu", "cuda" or None for automatic (see src.config.get_device).
+        device (str, optional): "cpu", "cuda" or None for automatic (see idcard_extractor.config.get_device).
         num_beams (int): Beam search width (1 = greedy, faster). Can be overridden per call.
         max_length (int, optional): Maximum generated length (default: the model limit). A smaller value stops runaway
             generations early; it cannot exceed the model limit. Can be overridden per call.

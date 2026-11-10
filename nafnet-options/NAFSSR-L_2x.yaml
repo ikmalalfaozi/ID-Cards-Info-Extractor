@@ -2,7 +2,7 @@
 name: NAFSSR-L_2x
 model_type: ImageRestorationModel
 scale: 2
-num_gpu: 1 # 0 = paksa CPU; selain itu device otomatis (lihat src/config.py, $IDCARD_DEVICE)
+num_gpu: 1 # 0 = paksa CPU; selain itu device otomatis (lihat idcard_extractor/config.py, $IDCARD_DEVICE)
 manual_seed: 10
 
 # network structures

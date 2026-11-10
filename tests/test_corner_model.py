@@ -2,8 +2,8 @@
 import numpy as np
 import pytest
 
-from src import model_store
-from src.image_alignment import corner_model as cm
+from idcard_extractor import model_store
+from idcard_extractor.image_alignment import corner_model as cm
 
 
 def test_defaults_and_enum_like_types():
@@ -79,7 +79,7 @@ def test_torch_backend_gives_actionable_error_without_onnx2torch():
                 if name.split('.')[0] == 'onnx2torch':
                     raise ImportError('diblokir untuk uji')
         sys.meta_path.insert(0, Block())
-        from src.image_alignment.corner_model import _TorchSession
+        from idcard_extractor.image_alignment.corner_model import _TorchSession
         try:
             _TorchSession('x.onnx', 'cpu')
         except ImportError as e:

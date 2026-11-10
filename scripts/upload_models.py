@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Unggah model ke Hugging Face Hub dan perbarui src/model_manifest.json (lihat docs/model-storage-design.md).
+"""Unggah model ke Hugging Face Hub dan perbarui idcard_extractor/model_manifest.json (lihat docs/model-storage-design.md).
 
 Default HANYA rencana (dry-run): tidak mengunduh, tidak mengunggah, tidak mengubah manifest.
 
@@ -27,7 +27,7 @@ from typing import Any, Callable, Dict, List, Optional
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src import model_store as ms  # noqa: E402
+from idcard_extractor import model_store as ms  # noqa: E402
 
 NAFNET_LICENSE_URL = "https://raw.githubusercontent.com/megvii-research/NAFNet/main/LICENSE"
 NAFNET_REPO_URL = "https://github.com/megvii-research/NAFNet"
@@ -154,8 +154,8 @@ tags:
 
 Kumpulan model untuk pipeline ekstraksi informasi KTP/SIM/Paspor
 ([ID-Cards-Info-Extractor]({'https://github.com/ikmalalfaozi/ID-Cards-Info-Extractor'})).
-Rilis: `{tag}`. Repo ini dipakai oleh `src/model_store.py` dengan commit sha dan sha256 yang dicatat di
-`src/model_manifest.json`; sebaiknya jangan mengunduh berkas tanpa memeriksa sha256.
+Rilis: `{tag}`. Repo ini dipakai oleh `idcard_extractor/model_store.py` dengan commit sha dan sha256 yang dicatat di
+`idcard_extractor/model_manifest.json`; sebaiknya jangan mengunduh berkas tanpa memeriksa sha256.
 
 {license_section}
 ## Isi
@@ -177,13 +177,13 @@ Rilis: `{tag}`. Repo ini dipakai oleh `src/model_store.py` dengan commit sha dan
   Apache-2.0), tidak dimodifikasi, untuk deteksi 4 sudut dokumen (heatmap: `fastvit_sa24`, `fastvit_t8`, `lcnet100`;
   point: `lcnet050`). Disalin ulang di sini agar dapat diunduh tanpa Google Drive. Penulis tidak menyebut lisensi bobot
   maupun data latih secara terpisah; teks lisensi kode ada di `LICENSES/DocAligner-LICENSE.txt`. Dijalankan langsung
-  dengan onnxruntime (`src/image_alignment/corner_model.py`). Rujukan: Yuan, "DocAligner", 2023 (repo GitHub di atas).
+  dengan onnxruntime (`idcard_extractor/image_alignment/corner_model.py`). Rujukan: Yuan, "DocAligner", 2023 (repo GitHub di atas).
 - Model OCR Donut tidak ada di repo ini (`ikmalalfaozi/donut-base-finetuned-ktp-sim-passport-v3`).
 
 ## Pemakaian
 
 ```python
-from src.model_store import ensure_model   # dari repo GitHub di atas
+from idcard_extractor.model_store import ensure_model   # dari repo GitHub di atas
 path = ensure_model("doc-seg")             # mengunduh dari {repo_id} pada revisi yang dipin, memverifikasi sha256
 ```
 """
@@ -330,7 +330,7 @@ def main(argv: Optional[List[str]] = None, api: Any = None, license_fetcher: Cal
     issues = ms.manifest_issues(new)
     print("Manifest diperbarui: " + str(ms.MANIFEST_PATH))
     print("Manifest siap rilis." if not issues else "Masih ada yang kosong:\n  - " + "\n  - ".join(issues))
-    print("Selanjutnya: git diff src/model_manifest.json, lalu commit.")
+    print("Selanjutnya: git diff idcard_extractor/model_manifest.json, lalu commit.")
     return 0
 
 

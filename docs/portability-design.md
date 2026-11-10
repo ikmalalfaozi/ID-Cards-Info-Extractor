@@ -119,5 +119,5 @@ Semua kelas (`DocDetector`, `DocOrientationDetector`, `CornerDetector`, `ImageRe
 ## 6. Keputusan yang masih terbuka
 
 1. Sumber unduhan model: Hugging Face Hub atau GitHub Release (atau tetap `gdown` + fallback)?
-2. Apakah nama paket `src` boleh diganti (mis. `idcard_extractor`) agar bisa di-`pip install`, atau dibiarkan dulu?
+2. ~~Apakah nama paket `src` boleh diganti?~~ **Diputuskan:** diganti menjadi `idcard_extractor` (tahap 5); dokumen ini masih menulis `src` sebagai nama lama.
 3. Varian NAFNet yang dipakai (GoPro-width64 untuk deblur? SIDD untuk denoise?), supaya YAML dan bobot yang tidak dipakai bisa dibuang.
