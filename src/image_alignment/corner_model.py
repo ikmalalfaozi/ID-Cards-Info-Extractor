@@ -59,33 +59,70 @@ def _corner_from_heatmap(channel, size_hw):
     return [m["m10"] / (m["m00"] + 1e-5), m["m01"] / (m["m00"] + 1e-5)]
 
 
-class CornerModel:
-    def __init__(self, model_type="heatmap", model_cfg=None, model_path=None, device=None):
+BACKENDS = ("onnx", "torch")
+
+
+class _TorchSession:
+    """Menjalankan grafik ONNX sebagai modul torch (onnx2torch); antarmukanya meniru `onnxruntime.InferenceSession.run`."""
+
+    def __init__(self, model_path, device):
         try:
-            import onnxruntime as ort
+            import torch
+            from onnx2torch import convert
         except ImportError as e:
-            raise ImportError("onnxruntime tidak terpasang. Pasang dengan: pip install onnxruntime "
-                              "(atau onnxruntime-gpu untuk CUDA).") from e
+            raise ImportError("Backend 'torch' membutuhkan onnx2torch. Pasang dengan: "
+                              "pip install -r requirements/torch-backend.txt") from e
+        self._torch = torch
+        self.device = device
+        self.module = convert(model_path).eval().to(device)
 
-        self.device = get_device(device)
-        use_cuda = self.device.startswith("cuda") and onnx_cuda_available()
-        if self.device.startswith("cuda") and not use_cuda:
-            print("CornerModel: onnxruntime-gpu tidak terpasang. Memakai CPU.")
-        else:
-            print(f"CornerModel: using {'GPU (CUDA)' if use_cuda else 'CPU'}.")
+    def run(self, output_names, feed):
+        torch = self._torch
+        with torch.inference_mode():
+            out = self.module(torch.from_numpy(feed["img"]).to(self.device))
+        out = list(out) if isinstance(out, (list, tuple)) else [out]
+        return [o.cpu().numpy() for o in out]
 
-        opts = ort.SessionOptions()
-        opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-        opts.log_severity_level = 2
-        if use_cuda:
-            device_id = int(self.device.split(":")[1]) if ":" in self.device else 0
-            providers = [("CUDAExecutionProvider", {"device_id": device_id, "cudnn_conv_use_max_workspace": "1"})]
-        else:
-            providers = ["CPUExecutionProvider"]
+
+def _onnx_session(model_path, device):
+    try:
+        import onnxruntime as ort
+    except ImportError as e:
+        raise ImportError("onnxruntime tidak terpasang. Pasang dengan: pip install onnxruntime "
+                          "(atau onnxruntime-gpu untuk CUDA).") from e
+
+    use_cuda = device.startswith("cuda") and onnx_cuda_available()
+    if device.startswith("cuda") and not use_cuda:
+        print("CornerModel: onnxruntime-gpu tidak terpasang. Memakai CPU.")
+    else:
+        print(f"CornerModel: using {'GPU (CUDA)' if use_cuda else 'CPU'}.")
+
+    opts = ort.SessionOptions()
+    opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+    opts.log_severity_level = 2
+    if use_cuda:
+        device_id = int(device.split(":")[1]) if ":" in device else 0
+        providers = [("CUDAExecutionProvider", {"device_id": device_id, "cudnn_conv_use_max_workspace": "1"})]
+    else:
+        providers = ["CPUExecutionProvider"]
+    return ort.InferenceSession(model_path, sess_options=opts, providers=providers)
+
+
+class CornerModel:
+    def __init__(self, model_type="heatmap", model_cfg=None, model_path=None, device=None, backend="onnx"):
+        """backend: "onnx" (onnxruntime, bawaan) atau "torch" (onnx2torch; opsional, lebih lambat di CPU)."""
+        if backend not in BACKENDS:
+            raise ValueError(f"Unsupported backend: {backend!r} (use {' or '.join(map(repr, BACKENDS))}).")
+        self.backend = backend
         self.model_type, self.model_cfg = _normalize(model_type, model_cfg)
+        self.device = get_device(device)
         name = MODELS[self.model_type][self.model_cfg]
         self.model_path = str(resolve_model_path(name, model_path=model_path))
-        self.session = ort.InferenceSession(self.model_path, sess_options=opts, providers=providers)
+        if backend == "torch":
+            print(f"CornerModel[torch]: using {self.device}.")
+            self.session = _TorchSession(self.model_path, self.device)
+        else:
+            self.session = _onnx_session(self.model_path, self.device)
 
     def __call__(self, image):
         """Kembalikan array float32 (n, 2) berisi titik (x, y); n < 4 bila ada sudut yang tak terdeteksi."""

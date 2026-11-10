@@ -63,20 +63,23 @@ def interactive_get_contour(corners, image):
 
 
 class CornerDetector:
-    def __init__(self, model_type="heatmap", model_cfg=None, model_path=None, device=None):
+    def __init__(self, model_type="heatmap", model_cfg=None, model_path=None, device=None, backend="onnx"):
         """
-        Initialize the corner detector (DocAligner models, run directly with onnxruntime).
+        Initialize the corner detector (DocAligner models, run directly with onnxruntime or, optionally, torch).
 
         Args:
             model_type (str): "heatmap" (default) or "point".
             model_cfg (str, optional): heatmap: 'fastvit_sa24' (default), 'fastvit_t8', 'lcnet100'; point: 'lcnet050'.
             model_path (str, optional): local ONNX file to use instead of the managed model.
             device (str, optional): "cpu", "cuda" or None for automatic (see src.config.get_device).
-                CUDA is used only when onnxruntime-gpu is installed.
+                With backend="onnx", CUDA is used only when onnxruntime-gpu is installed.
+            backend (str): "onnx" (default, onnxruntime) or "torch" (onnx2torch, see requirements/torch-backend.txt;
+                same corners, slower on CPU).
         """
         from .corner_model import CornerModel
 
-        self.model = CornerModel(model_type=model_type, model_cfg=model_cfg, model_path=model_path, device=device)
+        self.model = CornerModel(model_type=model_type, model_cfg=model_cfg, model_path=model_path, device=device,
+                                 backend=backend)
         self.device = self.model.device
 
     def detect_corners(self, image, mask=None, interactive=False):
