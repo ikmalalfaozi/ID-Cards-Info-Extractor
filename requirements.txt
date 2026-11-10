@@ -1,7 +1,4 @@
-# PERHATIAN: `pip install -r requirements.txt` SAJA TIDAK CUKUP.
-# capybara-docsaid 0.6.0 punya metadata yang tidak bisa di-resolve (onnxruntime_gpu==1.20.1
-# tidak ada di PyPI), jadi dipasang terpisah dengan --no-deps. Gunakan:
-#     bash scripts/install.sh [cpu|gpu]
-# atau ikuti langkah manual di docs/INSTALL.md.
+# Dependensi runtime (CPU). torch/torchvision tidak dicantumkan: pasang sendiri atau pakai scripts/install.sh.
+# Untuk GPU: ganti requirements/onnx-cpu.txt dengan requirements/onnx-gpu.txt. Panduan lengkap: docs/INSTALL.md
 -r requirements/base.txt
--r requirements/docaligner-deps.txt
+-r requirements/onnx-cpu.txt

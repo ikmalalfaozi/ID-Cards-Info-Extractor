@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def import_or_skip(name):
     try:
         return __import__(name, fromlist=["_"])
-    except Exception as e:  # mis. libturbojpeg tidak ada (capybara membuat TurboJPEG saat impor)
+    except Exception as e:  # mis. dependensi opsional tidak terpasang
         pytest.skip(f"{name} tidak dapat diimpor di lingkungan ini: {type(e).__name__}: {e}")
 
 
