@@ -1,2 +1,3 @@
 include requirements/*.txt
 include idcard_extractor/model_manifest.json
+include idcard_extractor/nafnet/options/*.yaml

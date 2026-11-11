@@ -105,14 +105,14 @@ def stage_preprocess(rgb):
 
 
 # ------------------------------------------------------------------ 7. nafnet
-def stage_nafnet(rgb, config="nafnet-options/NAFNet-GoPro-width32.yaml"):
+def stage_nafnet(rgb, config="NAFNet-GoPro-width32"):
     """(Opsional) restorasi dengan NAFNet sebagai alternatif deblur klasik.
 
     Bobot (kunci `pretrain_model` di YAML) diunduh dari Hugging Face dan diverifikasi sha256 saat pertama kali dipakai.
     """
     from idcard_extractor.nafnet.utils import parse, create_model, img2tensor, tensor2img
 
-    opt = parse(os.path.join(ROOT, config))
+    opt = parse(config)  # nama konfigurasi bawaan paket, atau path ke YAML sendiri
     model = create_model(opt)  # device otomatis (GPU bila ada); paksa CPU: IDCARD_DEVICE=cpu
     bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
     model.feed_data({"lq": img2tensor(bgr).unsqueeze(0)})

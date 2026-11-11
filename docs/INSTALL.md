@@ -12,7 +12,8 @@ python -m idcard_extractor.smoke    # smoke test (impor, device, model, detektor
 ```
 
 Impor: `from idcard_extractor.image_alignment import DocDetector, CornerDetector, warp_image`. Konfigurasi NAFNet
-(`nafnet-options/*.yaml`) dan contoh (`examples/`) tidak ikut terpasang sebagai paket; pakai dari clone repo.
+ikut terpasang (`idcard_extractor/nafnet/options/*.yaml`): `parse("NAFNet-GoPro-width32")` atau path YAML sendiri.
+Contoh (`examples/`) tidak ikut terpasang; pakai dari clone repo.
 
 `pip install -r requirements.txt` cukup untuk dependensi runtime (CPU). DocAligner tidak lagi dipasang sebagai paket:
 modelnya dijalankan langsung lewat onnxruntime (`idcard_extractor/image_alignment/corner_model.py`), jadi tidak ada pin

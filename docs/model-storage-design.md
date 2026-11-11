@@ -114,7 +114,7 @@ Keputusan desain:
 | `idcard_extractor/image_alignment/orientation.py` | sama, kunci `doc-oc` |
 | `idcard_extractor/utils.py` | tambah `load_doc_type_model(model_path=None) -> YOLO` (kunci `doc-type-cls`) |
 | `idcard_extractor/nafnet/model.py` | `path.pretrain_model` (kunci manifest) dipakai bila ada; `path.pretrain_network_g` tetap sebagai override lokal eksplisit. Hapus blok `gdown`. (Bug `opt['dist']` dibereskan bersamaan, lihat `docs/portability-design.md` F6) |
-| `nafnet-options/*.yaml` (7) | ganti `pretrain_network_g` + `pretrain_network_g_gdrive_id` dengan `pretrain_model: <kunci>` |
+| `idcard_extractor/nafnet/options/*.yaml` (7) | ganti `pretrain_network_g` + `pretrain_network_g_gdrive_id` dengan `pretrain_model: <kunci>` |
 | `idcard_extractor/ocr/donut.py` | `DonutInfoExtractor(model_name=None, revision=None)` default dari `external_revision("donut")`; `download_model(..., revision, cache_dir=None)` meneruskan `revision=` ke `from_pretrained`; default cache = cache HF (tidak lagi `./models`) |
 | `examples/pipeline_stages.py` | `stage_filter` memakai `load_doc_type_model()` |
 | `.gitignore` | `models/` (setelah file `.pt` dikeluarkan dari working tree) |

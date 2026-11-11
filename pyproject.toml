@@ -25,7 +25,7 @@ dev = { file = ["requirements/dev.txt"] }
 include = ["idcard_extractor*"]
 
 [tool.setuptools.package-data]
-idcard_extractor = ["model_manifest.json"]
+idcard_extractor = ["model_manifest.json", "nafnet/options/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
