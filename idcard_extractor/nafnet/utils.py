@@ -1,5 +1,6 @@
 import yaml
 from collections import OrderedDict
+from pathlib import Path
 import cv2
 import math
 import numpy as np
@@ -34,16 +35,31 @@ def ordered_yaml():
     return Loader, Dumper
 
 
+OPTIONS_DIR = Path(__file__).resolve().parent / 'options'
+
+
+def config_path(name):
+    """Path of a YAML option file shipped with the package, e.g. 'NAFNet-GoPro-width32' (the '.yaml' suffix is optional)."""
+    name = str(name)
+    path = OPTIONS_DIR / (name if name.endswith('.yaml') else name + '.yaml')
+    if not path.is_file():
+        available = ', '.join(sorted(p.stem for p in OPTIONS_DIR.glob('*.yaml')))
+        raise FileNotFoundError(f"Konfigurasi NAFNet '{name}' tidak ada. Tersedia: {available}")
+    return path
+
+
 def parse(opt_path, is_train=False):
     """Parse option file.
 
     Args:
-        opt_path (str): Option file path.
+        opt_path (str): Option file path, or the name of a packaged config (see `config_path`).
         is_train (bool): Indicate whether in training or not. Default: False.
 
     Returns:
         (dict): Options.
     """
+    if not Path(opt_path).is_file():
+        opt_path = config_path(opt_path)
     with open(opt_path, mode='r') as f:
         loader, _ = ordered_yaml()
         opt = yaml.load(f, Loader=loader)

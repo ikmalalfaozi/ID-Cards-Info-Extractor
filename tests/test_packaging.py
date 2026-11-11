@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_pyproject_declares_package_manifest_and_extras():
     cfg = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     assert cfg["project"]["name"] == "idcard-extractor"
-    assert cfg["tool"]["setuptools"]["package-data"]["idcard_extractor"] == ["model_manifest.json"]
+    assert cfg["tool"]["setuptools"]["package-data"]["idcard_extractor"] == ["model_manifest.json", "nafnet/options/*.yaml"]
     assert (ROOT / "idcard_extractor" / "model_manifest.json").is_file()
     extras = cfg["tool"]["setuptools"]["dynamic"]["optional-dependencies"]
     assert set(extras) == {"onnx-cpu", "onnx-gpu", "torch-backend", "demo", "dev"}
@@ -43,3 +43,17 @@ def test_runner_exit_code_zero_when_all_pass():
     run = smoke.Runner()
     run.check("a", lambda: None)
     assert run.report() == 0
+
+
+def test_nafnet_configs_are_packaged_and_resolved_by_name():
+    from idcard_extractor.nafnet.utils import config_path, parse
+    import pytest
+
+    assert not (ROOT / "nafnet-options").exists()
+    opt = parse("NAFNet-GoPro-width32")                       # nama bawaan paket, tanpa path/cwd
+    assert opt["path"]["pretrain_model"] == "nafnet-gopro-w32"
+    assert config_path("NAFNet-GoPro-width32.yaml") == config_path("NAFNet-GoPro-width32")
+    own = ROOT / "idcard_extractor" / "nafnet" / "options" / "NAFSSR-L_2x.yaml"
+    assert parse(str(own))["name"] == parse("NAFSSR-L_2x")["name"]   # path eksplisit tetap bekerja
+    with pytest.raises(FileNotFoundError, match="Tersedia: .*NAFNet-GoPro-width32"):
+        config_path("tidak-ada")

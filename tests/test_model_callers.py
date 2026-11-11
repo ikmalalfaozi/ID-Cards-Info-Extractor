@@ -153,7 +153,7 @@ def test_nafnet_without_weights_config_builds_untrained_model():
 def test_nafnet_yaml_files_reference_manifest_keys_only():
     from idcard_extractor.nafnet.utils import parse
     manifest = ms.load_manifest()
-    files = sorted(glob.glob(str(ROOT / "nafnet-options" / "*.yaml")))
+    files = sorted(glob.glob(str(ROOT / "idcard_extractor" / "nafnet" / "options" / "*.yaml")))
     assert len(files) == 7
     seen = set()
     for f in files:

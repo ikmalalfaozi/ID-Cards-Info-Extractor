@@ -78,7 +78,7 @@ Aturan versi:
 - `torch.load(..., weights_only=True)` (checkpoint hanya berisi tensor; berlaku default di torch 2.6, dibuat eksplisit).
 - `measure_inference_speed`: bungkus `torch.cuda.synchronize()` dengan `if torch.cuda.is_available()`.
 - Impor relatif (`from .archs import ...`) menggantikan `from src.nafnet...`.
-- YAML di `nafnet-options/` hanya menyimpan nama model; path bobot dan sumber unduhan dikelola `models_hub` (3.4).
+- YAML di `idcard_extractor/nafnet/options/` hanya menyimpan nama model; path bobot dan sumber unduhan dikelola `models_hub` (3.4).
 
 ### 3.4 Path dan unduhan model (F9)
 
