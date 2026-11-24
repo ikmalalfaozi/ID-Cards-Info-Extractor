@@ -106,6 +106,7 @@ Opsi berikut mengubah kecepatan dan sebaiknya divalidasi (mis. CER) sebelum dipa
 |---|---|
 | `max_length=300` (konstruktor atau per panggilan) | memotong generasi yang tak berujung; tidak mengubah keluaran yang valid. Tidak boleh melebihi batas model (1536) |
 | `num_beams=1` | greedy, lebih cepat (uji CPU: ±1,4x); keluaran bisa berbeda dari beam 3 |
+| `stop_on_repeat=10` (konstruktor atau per panggilan; bawaan mati) | menghentikan urutan yang mengulang satu token yang sama 10 kali berturut-turut. Pada log ablasi, 43% waktu habis di loop semacam itu (keluarannya tak ter-parse). Pada beam search, `generate` baru berhenti bila semua beam berulang, jadi hematnya bisa lebih kecil (belum diukur pada Donut asli). Pakai nilai besar (>= 10): keluaran sah dengan deretan token identik sepanjang itu ikut terpotong |
 | `predict_batch(images, batch_size=...)` | satu `generate` untuk beberapa gambar; terutama bermanfaat di GPU |
 | `dtype="bfloat16"` / `"float16"` | `float16` hanya CUDA; belum divalidasi |
 | `quantize="int8"` | kuantisasi dinamis, hanya CPU; ±1,4x lebih cepat tetapi keluaran berubah |
