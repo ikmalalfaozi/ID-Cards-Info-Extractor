@@ -1,0 +1,19 @@
+# general settings
+name: NAFSSR-L_4x
+model_type: ImageRestorationModel
+scale: 4
+num_gpu: 1 # 0 = paksa CPU; selain itu device otomatis (lihat idcard_extractor/config.py, $IDCARD_DEVICE)
+manual_seed: 10
+
+# network structures
+network_g:
+  type: NAFSSR
+  up_scale: 4
+  width: 128
+  num_blks: 128
+
+# path
+path:
+  pretrain_model: nafssr-l-4x
+  strict_load_g: true
+  resume_state: ~

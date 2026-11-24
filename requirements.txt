@@ -1,14 +1,4 @@
-torch~=2.6.0
-pillow~=11.1.0
-transformers~=4.41.2
-numpy~=1.26.4
-gdown~=5.2.0
-PyYAML~=6.0.2
-opencv-python~=4.9.0.80
-torchvision~=0.21.0
-ultralytics~=8.3.76
-scikit-image~=0.25.2
-matplotlib~=3.10.0
-streamlit~=1.45.1
-docaligner-docsaid
-capybara-docsaid~=0.6.0
+# Dependensi runtime (CPU). torch/torchvision tidak dicantumkan: pasang sendiri atau pakai scripts/install.sh.
+# Untuk GPU: ganti requirements/onnx-cpu.txt dengan requirements/onnx-gpu.txt. Panduan lengkap: docs/INSTALL.md
+-r requirements/base.txt
+-r requirements/onnx-cpu.txt

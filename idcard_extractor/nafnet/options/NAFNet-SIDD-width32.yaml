@@ -1,0 +1,20 @@
+# general settings
+name: NAFNet-SIDD-width32-test
+model_type: ImageRestorationModel
+scale: 1
+num_gpu: 1 # 0 = paksa CPU; selain itu device otomatis (lihat idcard_extractor/config.py, $IDCARD_DEVICE)
+manual_seed: 10
+
+# network structures
+network_g:
+  type: NAFNet
+  width: 32
+  enc_blk_nums: [2, 2, 4, 8]
+  middle_blk_num: 12
+  dec_blk_nums: [2, 2, 2, 2]
+
+# path
+path:
+  pretrain_model: nafnet-sidd-w32
+  strict_load_g: true
+  resume_state: ~
