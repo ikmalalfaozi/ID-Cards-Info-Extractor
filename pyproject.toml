@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,6 +7,8 @@ name = "idcard-extractor"
 version = "0.1.0"
 description = "Ekstraksi informasi dari ID card (KTP/SIM/Paspor): deteksi dokumen, alignment, restorasi NAFNet, OCR Donut"
 requires-python = ">=3.10,<3.14"
+license = "AGPL-3.0-only"
+license-files = ["LICENSE", "LICENSES/*"]
 dynamic = ["dependencies", "optional-dependencies"]
 
 # Dependensi dibaca dari requirements/ agar hanya ada satu sumber. torch/torchvision sengaja tidak dicantumkan

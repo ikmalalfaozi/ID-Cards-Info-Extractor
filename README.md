@@ -96,11 +96,18 @@ Diuji: Linux/WSL (Python 3.11 dan 3.13, CPU) dan Kaggle (Tesla T4, Python 3.13).
 `onnxruntime-gpu`, dan kesetaraan penuh dengan hasil tesis pada seluruh dataset (2.573 gambar). Rinciannya ada di
 `docs/INSTALL.md`.
 
-## Model dan lisensi
+## Lisensi
+
+Kode proyek ini dilisensikan di bawah **GNU AGPL-3.0** (lihat [`LICENSE`](LICENSE)), Copyright (C) 2025-2026 Ikmal Alfaozi. Alasannya:
+`ultralytics` berlisensi AGPL-3.0 dan di-import langsung oleh detektor dokumen. Menjalankan versi yang sudah diubah sebagai layanan
+jaringan mewajibkan penyediaan kode sumbernya kepada penggunanya.
+
+Kode, model, dan pustaka pihak ketiga serta lisensinya didaftar di [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md); teks lisensi yang
+wajib dipertahankan ada di [`LICENSES/`](LICENSES). Ringkasnya:
 
 - **Model** ada di Hugging Face: [`ikmalalfaozi/id-cards-extractor-models`](https://huggingface.co/ikmalalfaozi/id-cards-extractor-models)
   (YOLO, NAFNet, DocAligner) dan `ikmalalfaozi/donut-base-finetuned-ktp-sim-passport-v3` (Donut).
-- **DocAligner:** kode asli berlisensi Apache-2.0 ([DocsaidLab/DocAligner](https://github.com/DocsaidLab/DocAligner)).
-  Bobotnya diterbitkan ulang dengan atribusi, tetapi penulis aslinya belum menyatakan lisensi untuk bobot maupun data latihnya.
-- **YOLO:** `ultralytics` berlisensi AGPL-3.0; periksa ketentuannya sebelum memakai model ini dalam layanan yang diakses publik.
-- Repo ini belum memiliki berkas lisensi sendiri.
+- **DocAligner:** kode asli berlisensi Apache-2.0 ([DocsaidLab/DocAligner](https://github.com/DocsaidLab/DocAligner)). Bobotnya
+  diterbitkan ulang dengan atribusi, tetapi penulis aslinya belum menyatakan lisensi untuk bobot maupun data latihnya.
+- **NAFNet dan Donut** berlisensi MIT; bobot NAFNet tidak dinyatakan lisensinya secara terpisah.
+- Dataset tesis tidak disertakan.

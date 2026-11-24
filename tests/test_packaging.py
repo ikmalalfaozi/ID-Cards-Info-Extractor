@@ -57,3 +57,12 @@ def test_nafnet_configs_are_packaged_and_resolved_by_name():
     assert parse(str(own))["name"] == parse("NAFSSR-L_2x")["name"]   # path eksplisit tetap bekerja
     with pytest.raises(FileNotFoundError, match="Tersedia: .*NAFNet-GoPro-width32"):
         config_path("tidak-ada")
+
+
+def test_license_files_and_metadata_are_consistent():
+    cfg = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    assert cfg["project"]["license"] == "AGPL-3.0-only"
+    assert (ROOT / "LICENSE").read_text(encoding="utf-8").lstrip().startswith("GNU AFFERO GENERAL PUBLIC LICENSE")
+    notices = (ROOT / "THIRD_PARTY_NOTICES.md").read_text(encoding="utf-8")
+    for name in ("NAFNet-MIT.txt", "Donut-MIT.txt", "DocAligner-Apache-2.0.txt", "FastViT-Apple.txt"):
+        assert (ROOT / "LICENSES" / name).is_file() and name in notices, name
