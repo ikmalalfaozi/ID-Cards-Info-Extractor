@@ -129,3 +129,59 @@ def test_quantize_validation_and_effect(donut):
         donut(quantize="int8", dtype="bfloat16")
     ex = donut(quantize="int8")
     assert "quantized" in type(ex.model.linear).__module__.lower() or "dynamic" in type(ex.model.linear).__module__.lower()
+
+
+# ------------------------------------------------------------------ stop_on_repeat
+def test_repeated_token_stop_judges_each_row():
+    stop = d.RepeatedTokenStop(3)
+    ids = torch.tensor([[9, 4, 4, 4], [9, 4, 5, 4], [4, 4, 4, 5]])
+    assert stop(ids, None).tolist() == [True, False, False]
+    assert stop(torch.tensor([[4, 4]]), None).tolist() == [False]            # lebih pendek dari `repeats`
+
+
+def test_stop_on_repeat_is_off_by_default_and_passes_criteria_when_set(donut):
+    ex = donut()
+    ex.predict(IMG)
+    assert "stopping_criteria" not in ex.model.calls[0][1]                  # keluaran tesis tidak tersentuh
+    ex = donut(stop_on_repeat=10)
+    ex.predict(IMG)
+    crit = ex.model.calls[0][1]["stopping_criteria"]
+    assert [c.repeats for c in crit] == [10]
+    ex.predict(IMG, stop_on_repeat=12)                                      # per panggilan menimpa bawaan instance
+    assert [c.repeats for c in ex.model.calls[1][1]["stopping_criteria"]] == [12]
+    ex.predict_batch([IMG, IMG], stop_on_repeat=7)
+    assert [c.repeats for c in ex.model.calls[2][1]["stopping_criteria"]] == [7]
+
+
+def test_stop_on_repeat_validation(donut):
+    for bad in (1, 0, -3, 2.5, True, "10"):
+        with pytest.raises(ValueError, match="stop_on_repeat"):
+            donut(stop_on_repeat=bad)
+    with pytest.raises(ValueError, match="stop_on_repeat"):
+        donut().predict(IMG, stop_on_repeat=1)
+
+
+def test_stop_on_repeat_really_shortens_generation_with_transformers():
+    """Integrasi dengan generate sungguhan (model MBart kecil acak, greedy): model yang selalu mengulang satu token berhenti dini.
+
+    Pada beam search generate baru berhenti bila SEMUA beam berulang; itu tidak diuji di sini (perlu diukur pada Donut asli).
+    """
+    beams = 1
+    from transformers import LogitsProcessor, LogitsProcessorList, MBartConfig, MBartForCausalLM
+
+    class Force(LogitsProcessor):
+        def __call__(self, input_ids, scores):
+            scores[:] = -1e9
+            scores[:, 5] = 0.0
+            return scores
+
+    torch.manual_seed(0)
+    model = MBartForCausalLM(MBartConfig(vocab_size=20, d_model=16, decoder_layers=1, decoder_attention_heads=2,
+                                         decoder_ffn_dim=16, max_position_embeddings=64, is_decoder=True,
+                                         is_encoder_decoder=False)).eval()
+    prompt = torch.tensor([[7, 8]])
+    common = dict(max_length=60, num_beams=beams, pad_token_id=1, eos_token_id=2, logits_processor=LogitsProcessorList([Force()]))
+    full = model.generate(prompt, **common)
+    stopped = model.generate(prompt, stopping_criteria=d.StoppingCriteriaList([d.RepeatedTokenStop(10)]), **common)
+    assert full.shape[1] == 60
+    assert stopped.shape[1] <= 2 + 10 + 1 and (stopped[0, 2:2 + 10] == 5).all()
