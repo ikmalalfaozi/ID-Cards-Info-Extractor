@@ -37,11 +37,13 @@ dulu (lihat [`docs/INSTALL.md`](docs/INSTALL.md), termasuk Windows, Colab, Kaggl
 
 ## Pakai
 
-Dari baris perintah, pada gambar contoh di `demo_input/`:
+Gambar di `demo_input/` sintetis (data fiktif, dibuat oleh `scripts/make_demo_images.py`), jadi tidak ada data pribadi.
+Pengklasifikasi jenis dokumen menilainya "Other" karena bukan dokumen asli, sehingga contoh baris perintah memakai
+`--skip-filter`; untuk foto KTP/SIM/Paspor sungguhan flag itu tidak perlu. Hasil OCR pada gambar sintetis hanya indikatif.
 
 ```bash
-python examples/pipeline_stages.py "demo_input/agus suganda.jpg"
-python examples/pipeline_stages.py demo_input/doni.jpg --until preprocess   # tanpa Donut
+python examples/pipeline_stages.py demo_input/contoh_ktp.jpg --skip-filter
+python examples/pipeline_stages.py demo_input/contoh_ktp.jpg --skip-filter --until preprocess   # tanpa Donut
 ```
 
 Dari Python:
@@ -52,7 +54,7 @@ from PIL import Image
 from idcard_extractor.image_alignment import DocDetector, CornerDetector, DocOrientationDetector, warp_image
 from idcard_extractor.ocr import DonutInfoExtractor
 
-rgb = cv2.cvtColor(cv2.imread("demo_input/doni.jpg"), cv2.COLOR_BGR2RGB)
+rgb = cv2.cvtColor(cv2.imread("demo_input/contoh_ktp.jpg"), cv2.COLOR_BGR2RGB)
 
 doc = max(DocDetector().detect_and_segment(rgb, conf=0.5), key=lambda d: int(d["mask"].sum()))
 corners = CornerDetector().detect_corners(rgb, mask=doc["mask"])
@@ -64,9 +66,8 @@ card = orientation.correct_orientation(card, orientation.detect_orientation(card
 print(DonutInfoExtractor().predict(Image.fromarray(card)))   # dict berisi field dokumen
 ```
 
-Gambar antar tahap berupa `np.ndarray` RGB (HWC, uint8). Untuk SIM, hasilnya berisi antara lain `nomor_sim`, `nama_lengkap`,
-`tempat_lahir`, `tanggal_lahir`, `golongan_sim`; KTP dan Paspor memiliki field masing-masing (mis. `nomor_identitas`,
-`nomor_paspor`). Contoh di atas melewati tahap preprocessing; tahap itu ada di contoh per tahap.
+Gambar antar tahap berupa `np.ndarray` RGB (HWC, uint8). Field hasilnya bergantung jenis dokumen: KTP (mis. `nomor_identitas`, `nama_lengkap`,
+`tempat_tanggal_lahir`), SIM (`nomor_sim`, `golongan_sim`), Paspor (`nomor_paspor`, `jenis_paspor`). Contoh di atas melewati tahap preprocessing; tahap itu ada di contoh per tahap.
 
 Device dipilih otomatis (CUDA bila ada); paksa CPU dengan `IDCARD_DEVICE=cpu`. Donut punya opsi kecepatan
 (`num_beams`, `max_length`, `dtype`, `quantize`, `predict_batch`, `stop_on_repeat`), semuanya mati secara bawaan agar sama dengan

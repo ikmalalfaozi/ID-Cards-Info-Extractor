@@ -1,9 +1,12 @@
 """Contoh penggunaan setiap tahap pipeline, dari gambar mentah sampai JSON.
 
 Jalankan dari root repo:
-    python examples/pipeline_stages.py "demo_input/agus suganda.jpg"
-    python examples/pipeline_stages.py demo_input/doni.jpg --until preprocess   # tanpa Donut
-    python examples/pipeline_stages.py demo_input/doni.jpg --nafnet             # tambah NAFNet
+    python examples/pipeline_stages.py demo_input/contoh_ktp.jpg --skip-filter
+    python examples/pipeline_stages.py demo_input/contoh_ktp.jpg --skip-filter --until preprocess   # tanpa Donut
+    python examples/pipeline_stages.py demo_input/contoh_ktp.jpg --skip-filter --nafnet             # tambah NAFNet
+
+Gambar di demo_input/ sintetis (scripts/make_demo_images.py). Pengklasifikasi jenis dokumen menilainya "Other" karena
+bukan dokumen asli, jadi tahap filter dilewati dengan --skip-filter; untuk foto KTP/SIM/Paspor sungguhan tidak perlu.
 
 Hasil tiap tahap disimpan di outputs/<nama-gambar>/ (folder ini di-ignore git).
 Semua gambar antar tahap berformat RGB (np.ndarray, HWC, uint8).
@@ -137,6 +140,8 @@ def main():
     ap.add_argument("image")
     ap.add_argument("--until", choices=STAGES, default="ocr", help="berhenti setelah tahap ini selesai")
     ap.add_argument("--nafnet", action="store_true", help="sertakan tahap NAFNet setelah preprocess")
+    ap.add_argument("--skip-filter", action="store_true",
+                    help="lanjut walau jenis dokumen 'Other' (mis. gambar sintetis di demo_input/)")
     args = ap.parse_args()
 
     name = os.path.splitext(os.path.basename(args.image))[0].replace(" ", "_")
@@ -173,8 +178,8 @@ def main():
 
     print("[5] filter")
     doc = stage_filter(img)
-    if doc["class"] == "Other":
-        raise SystemExit("Bukan KTP/SIM/Paspor -> berhenti.")
+    if doc["class"] == "Other" and not args.skip_filter:
+        raise SystemExit("Bukan KTP/SIM/Paspor -> berhenti (gunakan --skip-filter untuk tetap melanjutkan).")
     if done("filter"):
         return
 

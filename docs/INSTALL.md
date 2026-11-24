@@ -47,7 +47,7 @@ session; Kaggle: Run > Restart & clear cell outputs). Lalu jalankan sel uji:
 
 ```python
 import sys; sys.path.insert(0, ".")          # atau %cd ke root repo
-!python examples/pipeline_stages.py "demo_input/doni.jpg" --until preprocess
+!python examples/pipeline_stages.py demo_input/contoh_ktp.jpg --skip-filter --until preprocess
 ```
 
 Untuk OCR (Donut, unduhan sekitar 777 MB): hapus `--until preprocess`. Model diunduh dari Hugging Face (lihat bagian Model).

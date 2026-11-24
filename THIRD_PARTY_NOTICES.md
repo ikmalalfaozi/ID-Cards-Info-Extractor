@@ -52,4 +52,4 @@ versi yang diuji:
 ## Data
 
 Dataset yang dipakai untuk pengujian tesis (foto KTP/SIM/Paspor) tidak disertakan di repo ini dan tidak boleh dipublikasikan
-tanpa memastikan aspek data pribadinya. Gambar di `demo_input/` adalah contoh; pastikan Anda berhak menerbitkannya.
+tanpa memastikan aspek data pribadinya. Gambar di `demo_input/` sintetis (data fiktif), dibuat oleh `scripts/make_demo_images.py`.

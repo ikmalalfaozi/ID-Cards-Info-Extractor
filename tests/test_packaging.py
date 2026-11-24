@@ -66,3 +66,21 @@ def test_license_files_and_metadata_are_consistent():
     notices = (ROOT / "THIRD_PARTY_NOTICES.md").read_text(encoding="utf-8")
     for name in ("NAFNet-MIT.txt", "Donut-MIT.txt", "DocAligner-Apache-2.0.txt", "FastViT-Apple.txt"):
         assert (ROOT / "LICENSES" / name).is_file() and name in notices, name
+
+
+def test_demo_images_are_synthetic_and_reproducible(tmp_path):
+    import cv2
+    import hashlib
+    import subprocess
+    import sys
+
+    def build(out):
+        subprocess.run([sys.executable, str(ROOT / "scripts" / "make_demo_images.py"), "--out", str(out)], check=True,
+                       capture_output=True)
+        return {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(out.glob("*.jpg"))}
+
+    first = build(tmp_path / "a")
+    assert sorted(first) == ["contoh_ktp.jpg", "contoh_paspor.jpg", "contoh_sim.jpg"]
+    assert first == build(tmp_path / "b")                                   # deterministik (seed tetap)
+    assert {p.name for p in (ROOT / "demo_input").glob("*.jpg")} == set(first)
+    assert all(cv2.imread(str(ROOT / "demo_input" / name)).shape[:2] == (960, 1280) for name in first)
