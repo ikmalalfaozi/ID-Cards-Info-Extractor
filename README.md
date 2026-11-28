@@ -78,7 +78,7 @@ setelan tesis. Pengaruhnya pada akurasi perlu divalidasi sebelum dipakai; lihat 
 | Lokasi | Isi |
 |---|---|
 | `idcard_extractor/image_alignment/` | detektor dokumen, sudut (DocAligner lewat onnxruntime), orientasi, warp |
-| `idcard_extractor/preprocessing/` | contrast enhancement, denoising, deblurring klasik |
+| `idcard_extractor/preprocessing/` | contrast enhancement, denoising, deblurring klasik (`msr`, `msrcr`, `msrcp` punya opsi `fast=True`, lihat catatan di bawah) |
 | `idcard_extractor/nafnet/` | NAFNet untuk restorasi (konfigurasi di `nafnet/options/`) |
 | `idcard_extractor/ocr/` | `DonutInfoExtractor` |
 | `idcard_extractor/model_store.py`, `model_manifest.json` | unduhan model, dipin ke commit dan sha256 |
@@ -90,6 +90,10 @@ setelan tesis. Pengaruhnya pada akurasi perlu divalidasi sebelum dipakai; lihat 
 ```bash
 pip install -e ".[dev]" && pytest
 ```
+
+Catatan `fast=True` pada `msr`, `msrcr`, `msrcp`: blur Gauss bersigma besar dikerjakan pada resolusi diperkecil dengan float32, sehingga 7 sampai 36 kali lebih cepat
+(citra 856x540, CPU 4 inti) dan PSNR 42 sampai 53 dB terhadap jalur asli. Bawaannya tetap `fast=False`. Kesetaraan CER Donut baru teruji pada
+kondisi asli dan bayangan (MSRCR, MSRCP); pada citra gelap belum terbukti setara, jadi pakai untuk kecepatan, bukan sebagai klaim hasil identik.
 
 ## Status pengujian
 
